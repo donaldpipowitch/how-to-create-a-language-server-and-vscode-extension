@@ -1,0 +1,26 @@
+{
+  "name": "vscode-extension-server",
+  "description": "A VS Code Extensions language server",
+  "author": "Donald Pipowitch",
+  "license": "MIT",
+  "version": "1.0.0",
+  "main": "dist",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/donaldpipowitch/how-to-create-a-language-server-and-vscode-extension"
+  },
+  "engines": {
+    "node": "*"
+  },
+  "scripts": {
+    "build": "tsc -p src",
+    "watch": "tsc -p src -w"
+  },
+  "dependencies": {
+    "vscode-languageserver": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^8.0.0",
+    "typescript": "^3.0.0"
+  }
+}

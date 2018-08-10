@@ -1,0 +1,37 @@
+{
+  "name": "vscode-extension-client",
+  "description": "A client for the VS Code Extensions language server",
+  "author": "Donald Pipowitch",
+  "license": "MIT",
+  "version": "1.0.0",
+  "main": "dist",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/donaldpipowitch/how-to-create-a-language-server-and-vscode-extension"
+  },
+  "publisher": "vscode",
+  "categories": [],
+  "keywords": [
+    "vscode extension"
+  ],
+  "engines": {
+    "vscode": "^1.23.0"
+  },
+  "activationEvents": [
+    "onLanguage:plaintext"
+  ],
+  "scripts": {
+    "postinstall": "node ./node_modules/vscode/bin/install",
+    "vscode:prepublish": "cd client && npm run update-vscode && cd .. && npm run compile",
+    "build": "tsc -p src",
+    "watch": "tsc -p src -w"
+  },
+  "dependencies": {
+    "vscode": "^1.0.0",
+    "vscode-languageclient": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^8.0.0",
+    "typescript": "^3.0.0"
+  }
+}
