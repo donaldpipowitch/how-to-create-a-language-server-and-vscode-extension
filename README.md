@@ -9,7 +9,7 @@
 - you can find it here: https://code.visualstudio.com/docs/extensions/example-language-server
 - I write this tutorial mostly to learn myself and because it sometimes helps other to have just _one_ more example, a slightly different perspective or a different writing style to learn a concept a little bit better
 - I expect you to have some intermediate JavaScript knowledge
-- project will be written in TypeScript (https://www.typescriptlang.org), we use Jest (https://jestjs.io/) for testing and pnpm (https://pnpm.js.org/) as our package manager
+- project will be written in TypeScript (https://www.typescriptlang.org), we use Jest (https://jestjs.io/) for testing and yarn (https://yarnpkg.com/) as our package manager
 
 # Goal of this language server
 
@@ -25,11 +25,11 @@
 - If you want to work on this project make sure to have the following things installed:
 - VS Code (https://nodejs.org/en/) installed (I used `1.26.0-insider`) installed
 - Node (https://nodejs.org/en/) installed (I used `8.11.3`) installed
-- pnpm (https://github.com/pnpm/pnpm#install) installed (I used `2.13.1`)
+- yarn (https://yarnpkg.com/en/docs/install) installed (I used `1.9.4`)
 - Git (https://git-scm.com/) installed (I used `2.18.0`)
 
 - git clone ...
-- pnpm install
+- yarb install
 
 # Basic project structure
 
@@ -39,7 +39,7 @@
 - `.vscode/extensions.json` which holds our recommend project settings
 - `.gitignore` to not include dependencies and meta data/generated files via Git
 - `prettier.config.js` which holds our formatting options used by Prettier (https://prettier.io/)
-- `pnpm-workspace.yaml` our workspace configuration (https://pnpm.js.org/docs/en/workspace.html), because our projects makes use of multiple packages in one repository as you'll see soon
+- `package.json` our workspace configuration (https://yarnpkg.com/lang/en/docs/workspaces/), because our projects makes use of multiple packages in one repository as you'll see soon
 
 These are our packages we create:
 
@@ -49,4 +49,8 @@ These are our packages we create:
 
 Why do we have a `core` package in the first place? Many frameworks and tools add language server on top of their original functionality. Think of ESLint (https://eslint.org/) which works standalone from the ESLint language server (https://github.com/Microsoft/vscode-eslint/blob/master/server). We do the same. It makes it also easier to learn what is actually language server specific and what not in my experience.
 
-pnpm recursive install
+Note: Our `client` package needs to run `"postinstall": "vscode-install"` to generate the correct `vscode` typings needed at build time. If you get `''vscode'' has no exported member 'X'.` errors in some of your libs (like `vscode-languageclient`) these libs and your package probably require a different VS Code version. In our case we defined `"vscode": "^1.25.0"` in the `"engines"` section of `packages/client/package.json` which is the same used by `vscode-languageclient` at the time I'm writing this.
+
+- `"publisher": "vscode",` important
+- TODO: `launch.json`, debug test
+- `"window.openFoldersInNewWindow": "off",`; `--reuse-window` doesn't work

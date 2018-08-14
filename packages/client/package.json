@@ -15,13 +15,13 @@
     "vscode extension"
   ],
   "engines": {
-    "vscode": "^1.23.0"
+    "vscode": "^1.25.0"
   },
   "activationEvents": [
     "onLanguage:plaintext"
   ],
   "scripts": {
-    "postinstall": "node ./node_modules/vscode/bin/install",
+    "postinstall": "vscode-install",
     "vscode:prepublish": "cd client && npm run update-vscode && cd .. && npm run compile",
     "build": "tsc -p src",
     "watch": "tsc -p src -w"
