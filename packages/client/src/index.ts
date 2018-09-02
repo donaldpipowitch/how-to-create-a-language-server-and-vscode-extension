@@ -15,7 +15,7 @@ export function activate(context: ExtensionContext) {
   // let serverModule = context.asAbsolutePath(
   //   path.join('server', 'out', 'server.js')
   // );
-  let serverModule = require.resolve('vscode-extension-server');
+  let serverModule = require.resolve('@donaldpipowitch/vscode-extension-server');
 
   // The debug options for the server
   // --inspect=6009: runs the server in Node's Inspector mode so VS Code can attach to the server for debugging

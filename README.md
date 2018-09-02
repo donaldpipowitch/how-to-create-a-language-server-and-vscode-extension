@@ -1,3 +1,7 @@
+# WORK IN PROGRESS
+
+Below you can see some notes and TODOs which will be rewritten into a nice tutorial later.
+
 # Background
 
 - in this article you will learn how to create a language server and vscode extension which uses this language server
@@ -29,7 +33,7 @@
 - Git (https://git-scm.com/) installed (I used `2.18.0`)
 
 - git clone ...
-- yarb install
+- yarn install
 
 # Basic project structure
 
@@ -40,8 +44,11 @@
 - `.gitignore` to not include dependencies and meta data/generated files via Git
 - `prettier.config.js` which holds our formatting options used by Prettier (https://prettier.io/)
 - `package.json` our workspace configuration (https://yarnpkg.com/lang/en/docs/workspaces/), because our projects makes use of multiple packages in one repository as you'll see soon
+- TODO: `.travis.yml`
+- TODO: `settings.json`
+- TODO: `launch.json` - bigger explanation in different section
 
-These are our packages we create:
+These are our packages we will create:
 
 - `packages/core`: this package provides all the functionality we want to expose in our extension - but without any of the language server specific functionality
 - `packages/server`: our language server
@@ -54,3 +61,13 @@ Note: Our `client` package needs to run `"postinstall": "vscode-install"` to gen
 - `"publisher": "vscode",` important
 - TODO: `launch.json`, debug test
 - `"window.openFoldersInNewWindow": "off",`; `--reuse-window` doesn't work
+
+# Core
+
+three APIs to get
+
+- extension data
+- extension url
+- search for extensions
+
+any ongoing request can be canceled

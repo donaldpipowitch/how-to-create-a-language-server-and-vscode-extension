@@ -1,6 +1,6 @@
 {
-  "name": "@donaldpipowitch/vscode-extension-server",
-  "description": "A VS Code Extensions language server",
+  "name": "@donaldpipowitch/vscode-extension-core",
+  "description": "Exports some useful APIs to get information about VS Code extensions",
   "author": "Donald Pipowitch",
   "license": "MIT",
   "version": "1.0.0",
@@ -14,12 +14,11 @@
     "build": "tsc -p src",
     "watch": "tsc -p src -w"
   },
-  "dependencies": {
-    "vscode-languageserver": "^4.0.0"
-  },
   "devDependencies": {
-    "@donaldpipowitch/vscode-extension-core": "^1.0.0",
     "@types/node": "^8.0.0",
     "typescript": "^3.0.0"
+  },
+  "dependencies": {
+    "axios": "^0.18.0"
   }
 }
