@@ -44,6 +44,13 @@ connection.onCompletion(async ({ position, textDocument }) => {
     lastCancel = null;
   }
 
+  // connection.console.log(
+  //   `uri: ${textDocument.uri}, endsWith: ${textDocument.uri.endsWith(
+  //     '.vscode/extensions.json'
+  //   )}.`
+  // );
+  if (!textDocument.uri.endsWith('.vscode/extensions.json')) return;
+
   const document = documents.get(textDocument.uri);
   if (!document) return;
 

@@ -19,7 +19,7 @@
     "vscode": "^1.25.0"
   },
   "activationEvents": [
-    "onLanguage:plaintext"
+    "onLanguage:json"
   ],
   "scripts": {
     "postinstall": "vscode-install",
