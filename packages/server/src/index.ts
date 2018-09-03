@@ -1,11 +1,11 @@
 import { search, Canceler } from '@donaldpipowitch/vscode-extension-core';
-
 import {
   createConnection,
   TextDocuments,
   ProposedFeatures,
   CompletionItemKind
 } from 'vscode-languageserver';
+import { parseTree, findNodeAtOffset, Node } from 'jsonc-parser';
 
 const connection = createConnection(ProposedFeatures.all);
 
@@ -47,18 +47,16 @@ connection.onCompletion(async ({ position, textDocument }) => {
   const document = documents.get(textDocument.uri);
   if (!document) return;
 
-  const text = document.getText();
-  const inputEnd = document.offsetAt(position);
+  const tree = parseTree(document.getText());
+  const node = findNodeAtOffset(tree, document.offsetAt(position));
 
-  let inputStart = inputEnd - 1;
-  while (inputStart > 0 && text[inputStart - 1] !== ' ') {
-    inputStart -= 1;
-  }
-  const query = text.substring(inputStart, inputEnd);
+  if (!isExtensionValue(node)) return;
 
   // only search for queries with at least three characters
-  if (query.length <= 2) return;
-  connection.console.log(`You searched for ${query}.`);
+  if (node.value && node.value.length <= 2) return;
+
+  const query = node.value;
+  // connection.console.log(`You searched for ${query}.`);
 
   const { cancel, request } = search(query);
   lastCancel = cancel;
@@ -67,9 +65,6 @@ connection.onCompletion(async ({ position, textDocument }) => {
   lastCancel = null;
 
   if (!extensions) return;
-  connection.console.log(
-    `Search result: ${JSON.stringify(extensions, null, 2)}.`
-  );
 
   return extensions.map(
     ({
@@ -86,8 +81,33 @@ connection.onCompletion(async ({ position, textDocument }) => {
   );
 });
 
+function isExtensionValue(node: Node | undefined): node is Node {
+  // no node
+  if (!node) return false;
+  // not a string node
+  if (node.type !== 'string') return false;
+  // not within an array
+  if (!node.parent) return false;
+  if (node.parent.type !== 'array') return false;
+  // not on a "recommendations" or "unwantedRecommendations" property
+  if (!node.parent.parent) return false;
+  if (node.parent.parent.type !== 'property') return false;
+  if (
+    node.parent.parent.children![0].value !== 'recommendations' &&
+    node.parent.parent.children![0].value !== 'unwantedRecommendations'
+  )
+    return false;
+  // not on an object
+  if (!node.parent.parent.parent) return false;
+  if (node.parent.parent.parent.type !== 'object') return false;
+  // not the root
+  if (node.parent.parent.parent.parent) return false;
+  // whoohoo
+  return true;
+}
+
 // It looks like we need this or we get the following error:
-// Request completionItem/resolve failed. Message: Unhandled method completionItem/resolve
+// "Request completionItem/resolve failed. Message: Unhandled method completionItem/resolve"
 connection.onCompletionResolve((item) => item);
 
 // Listen for events
