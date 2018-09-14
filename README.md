@@ -2,6 +2,8 @@
 
 # `@donaldpipowitch/vscode-extension-*` project
 
+[![Build Status](https://travis-ci.org/donaldpipowitch/how-to-create-a-language-server-and-vscode-extension.svg?branch=master)](https://travis-ci.org/donaldpipowitch/how-to-create-a-language-server-and-vscode-extension)
+
 > This project offers a small language server for `.vscode/extensions.json` files.
 
 This `README.md` is written as a tutorial in which I'll explain how the `@donaldpipowitch/vscode-extension-*` project was created. This should be helpful, if you want to create a similar project or if you want to contribute to this project.
@@ -62,7 +64,7 @@ Before we dive into one of our packages I'll give you a short overview about the
 - [`.prettierignore`](.prettierignore): With this file Prettier will not format generated files.
 - [`.gitignore`](.gitignore): We ignore dependencies and meta data/generated files in Git. See [here](https://git-scm.com/docs/gitignore) to learn more.
 - [`package.json`](package.json): This file contains our [workspace configuration](https://yarnpkg.com/lang/en/docs/workspaces/), because our projects contains _multiple_ packages. It also contains top-level dependencies and commands.
-- TODO: `.travis.yml`
+- TODO: `.travis.yml` https://travis-ci.org/donaldpipowitch/how-to-create-a-language-server-and-vscode-extension
 - TODO: `settings.json`
 - TODO: `launch.json` - bigger explanation in different section
 
