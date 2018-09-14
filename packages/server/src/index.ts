@@ -44,11 +44,6 @@ connection.onCompletion(async ({ position, textDocument }) => {
     lastCancel = null;
   }
 
-  // connection.console.log(
-  //   `uri: ${textDocument.uri}, endsWith: ${textDocument.uri.endsWith(
-  //     '.vscode/extensions.json'
-  //   )}.`
-  // );
   if (!textDocument.uri.endsWith('.vscode/extensions.json')) return;
 
   const document = documents.get(textDocument.uri);
@@ -115,6 +110,7 @@ function isExtensionValue(node: Node | undefined): node is Node {
 
 // It looks like we need this or we get the following error:
 // "Request completionItem/resolve failed. Message: Unhandled method completionItem/resolve"
+// *Update*: I think this is need because of our "resolveProvider" config?
 connection.onCompletionResolve((item) => item);
 
 // Listen for events

@@ -1,6 +1,6 @@
 {
   "name": "@donaldpipowitch/vscode-extension-core",
-  "description": "Exports some useful APIs to get information about VS Code extensions",
+  "description": "Exports some useful APIs to get information about VS Code extensions.",
   "author": "Donald Pipowitch",
   "license": "MIT",
   "version": "1.0.0",

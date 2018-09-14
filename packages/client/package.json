@@ -1,6 +1,6 @@
 {
   "name": "@donaldpipowitch/vscode-extension-client",
-  "description": "A client for the VS Code Extensions language server",
+  "description": "A client for the .vscode/extensions.json language server.",
   "author": "Donald Pipowitch",
   "license": "MIT",
   "version": "1.0.0",
@@ -19,7 +19,7 @@
     "vscode": "^1.25.0"
   },
   "activationEvents": [
-    "onLanguage:json"
+    "workspaceContains:**/.vscode/extensions.json"
   ],
   "scripts": {
     "postinstall": "vscode-install",

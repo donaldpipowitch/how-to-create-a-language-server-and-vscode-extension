@@ -1,6 +1,4 @@
-// import * as path from 'path';
-import { workspace, ExtensionContext } from 'vscode';
-
+import { ExtensionContext } from 'vscode';
 import {
   LanguageClient,
   LanguageClientOptions,
@@ -11,38 +9,35 @@ import {
 let client: LanguageClient;
 
 export function activate(context: ExtensionContext) {
-  // The server is implemented in node
-  // let serverModule = context.asAbsolutePath(
-  //   path.join('server', 'out', 'server.js')
-  // );
-  let serverModule = require.resolve('@donaldpipowitch/vscode-extension-server');
+  const serverModule = require.resolve(
+    '@donaldpipowitch/vscode-extension-server'
+  );
 
-  // The debug options for the server
-  // --inspect=6009: runs the server in Node's Inspector mode so VS Code can attach to the server for debugging
-  let debugOptions = { execArgv: ['--nolazy', '--inspect=6009'] };
-
-  // If the extension is launched in debug mode then the debug server options are used
-  // Otherwise the run options are used
-  let serverOptions: ServerOptions = {
+  // Debug options for server are used when we launch the extension in debug mode
+  const serverOptions: ServerOptions = {
     run: { module: serverModule, transport: TransportKind.ipc },
     debug: {
       module: serverModule,
       transport: TransportKind.ipc,
-      options: debugOptions
+      options: { execArgv: ['--nolazy', '--inspect=6009'] }
     }
   };
 
-  // Options to control the language client
-  let clientOptions: LanguageClientOptions = {
-    // Register the server for plain text documents
-    documentSelector: [{ scheme: 'file', language: 'plaintext' }],
-    synchronize: {
-      // Notify the server about file changes to '.clientrc files contained in the workspace
-      fileEvents: workspace.createFileSystemWatcher('**/.clientrc')
-    }
+  const clientOptions: LanguageClientOptions = {
+    documentSelector: [
+      {
+        scheme: 'file',
+        language: 'json'
+        // pattern: '**∕.vscode/extensions.json'
+      },
+      {
+        scheme: 'file',
+        language: 'jsonc'
+        // pattern: '**∕.vscode/extensions.json'
+      }
+    ]
   };
 
-  // Create the language client and start the client.
   client = new LanguageClient(
     'languageServerExample',
     'Language Server Example',
@@ -50,13 +45,12 @@ export function activate(context: ExtensionContext) {
     clientOptions
   );
 
-  // Start the client. This will also launch the server
+  // Starting the client will also launch the server.
   client.start();
 }
 
 export function deactivate() {
-  if (!client) {
-    return;
+  if (client) {
+    return client.stop();
   }
-  return client.stop();
 }

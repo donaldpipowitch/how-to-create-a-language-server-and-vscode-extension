@@ -1,49 +1,67 @@
-# WORK IN PROGRESS
+⚠️ WORK IN PROGRESS ⚠️
 
-Below you can see some notes and TODOs which will be rewritten into a nice tutorial later.
+# `@donaldpipowitch/vscode-extension-*` project
 
-# Background
+> This project offers a small language server for `.vscode/extensions.json` files.
 
-- in this article you will learn how to create a language server and vscode extension which uses this language server
-- a language server adds features like _autocomplete_, _go to definition_, _documentation on hover_ and so on to a programming language, domain specific languages, but also frameworks and configurations if it can't be covered by the language alone
-- vscode is a nice and extensible open source editor (https://code.visualstudio.com/); we'll create an extension for vscode which will use our extension
-- in this special case we'll create a language server for a vscode specific feature: the `extensions.json`
-- normally you would create a language server so it can be re-used across multiple editors and IDEs, but for the scope of our tutorial this will work just fine as we only plan to create one extension for vs code anyway
-- there are multiple tutorials which cover this topic, the best one from the microsoft team itself which is responsible for vscode and the language server protocol (https://microsoft.github.io/language-server-protocol/)
-- you can find it here: https://code.visualstudio.com/docs/extensions/example-language-server
-- I write this tutorial mostly to learn myself and because it sometimes helps other to have just _one_ more example, a slightly different perspective or a different writing style to learn a concept a little bit better
-- I expect you to have some intermediate JavaScript knowledge
-- project will be written in TypeScript (https://www.typescriptlang.org), we use Jest (https://jestjs.io/) for testing and yarn (https://yarnpkg.com/) as our package manager
+This `README.md` is written as a tutorial in which I'll explain how the `@donaldpipowitch/vscode-extension-*` project was created. This should be helpful, if you want to create a similar project or if you want to contribute to this project.
 
-# Goal of this language server
+If you're just interested in _using_ the `@donaldpipowitch/vscode-extension-*` packages, you'll find the usage information in their corresponding `README.md`'s.
 
-- tested with `1.26.0-insider` of VS Code
-- say you create a `.vscode/extensions.json`
-- we already get code completion and validation for `{ recommendations: string[], unwantedRecommendations: string[] }`
-- code completion on `recommendations[]` even shows you currently installed extensions
-- we see on hover documentation for on the `recommendations` and `unwantedRecommendations` fields
-- what we don't have: on hover documentation on a specific extension, no go to definition for the extensions, no code completion for non-locally installed extensions
+| Package                                                                 | Description                                                           |
+| ----------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| [`@donaldpipowitch/vscode-extension-core`](packages/core/README.md)     | Exports some useful APIs to get information about VS Code extensions. |
+| [`@donaldpipowitch/vscode-extension-server`](packages/server/README.md) | A .vscode/extensions.json language server.                            |
+| [`@donaldpipowitch/vscode-extension-client`](packages/client/README.md) | A client for the .vscode/extensions.json language server.             |
 
-# Initial setup
+## Background
 
-- If you want to work on this project make sure to have the following things installed:
-- VS Code (https://nodejs.org/en/) installed (I used `1.26.0-insider`) installed
-- Node (https://nodejs.org/en/) installed (I used `8.11.3`) installed
-- yarn (https://yarnpkg.com/en/docs/install) installed (I used `1.9.4`)
-- Git (https://git-scm.com/) installed (I used `2.18.0`)
+In this article you will learn how you can create a language server and a VS Code extension which uses this language server. A language server adds features like _autocomplete_, _go to definition_ or _documentation on hover_ to a programming language, to domain specific languages, but also to frameworks and configuration files, if it can't be covered by the language alone.
 
-- git clone ...
-- yarn install
+[VS Code](https://code.visualstudio.com/) is a nice and extensible open source editor. We'll create an extension for VS Code which will use our custom language server. While language servers are editor agnostic we'll create a language server for a VS Code specific feature. So in this case it only makes sense to use it in the context of VS Code.
 
-# Basic project structure
+There are already existing tutorials which cover this topic. The best tutorial probably was created by the MicroSoft team itself which is responsible for VS Code and the [language server protocol](https://microsoft.github.io/language-server-protocol/) which powers all language server. You can find [MicroSofts tutorial here](https://code.visualstudio.com/docs/extensions/example-language-server). Nevertheless I write my own tutorial for two reasons. First I write this tutorial for myself, so I can learn the concepts and the APIs in my own pace. Second I write it for _you_, because sometimes it helps to get a _similar_ tutorial for the same topic from a different perspective. For example my tooling, my project structure and my writing style will be slightly different. And sometimes this already helps learning something new!
 
-- `README.md` - the very file you're currently reading, used for the whole project documentation
-- `LICENSE` - our license information, MIT for everything (https://opensource.org/licenses/MIT)
-- `.vscode/extensions.json` which recommends the extensions I used to develop this project; also helps us to validate our on language server easily
-- `.vscode/extensions.json` which holds our recommend project settings
-- `.gitignore` to not include dependencies and meta data/generated files via Git
-- `prettier.config.js` which holds our formatting options used by Prettier (https://prettier.io/)
-- `package.json` our workspace configuration (https://yarnpkg.com/lang/en/docs/workspaces/), because our projects makes use of multiple packages in one repository as you'll see soon
+What we'll do is creating a language server and the corresponding VS Code extension which uses this server to add more functionality to `.vscode/extensions.json` files. I expect you to have some intermediate JavaScript knowledge. This project will be written in [TypeScript](https://www.typescriptlang.org), we use [Jest](https://jestjs.io/) for testing and [yarn](https://yarnpkg.com/) as our package manager.
+
+## Goal of this language server
+
+The `.vscode/extensions.json` files in the root of project can contain recommendations for extensions as well as unwanted recommendations for this specific project. If a user of VS Code opens the project the editor asks the user if he/she wants to install missing recommended extensions or to disable unwanted, but already installed extensions.
+
+Out of the box VS Code already offers code completion and validation for the interface (`{ recommendations: string[], unwantedRecommendations: string[] }`) of these files. The code completion for `recommendations[]`/`unwantedRecommendations[]` even shows you currently installed extensions. What is _missing_?
+
+- code completion for extensions which aren't installed locally
+- on hover documentation for an extension (**TODO**)
+- got to definitions for an extension (**TODO**)
+
+We try to add these three features in this tutorial.
+
+## Initial setup
+
+The project was tested and developed with following technologies:
+
+- [VS Code](https://code.visualstudio.com/) (I used `1.28.0-insider`)
+- [Node](https://nodejs.org/en/) (I used `8.11.3`)
+- [yarn](https://yarnpkg.com/en/docs/install) (I used `1.9.4`)
+- [Git](https://git-scm.com/) (I used `2.18.0`)
+
+If you have these requirements installed, you can setup the project with the following steps:
+
+1. `$ git clone https://github.com/donaldpipowitch/how-to-create-a-language-server-and-vscode-extension.git`
+2. `$ cd how-to-create-a-language-server-and-vscode-extension`
+3. `$ yarn`
+
+## Basic project structure
+
+Before we dive into one of our packages I'll give you a short overview about the whole project structure.
+
+- [`README.md`](README.md): The very file you're currently reading. It serves as a tutorial for the whole project.
+- [`LICENSE`](LICENSE): This project uses the [MIT license](https://opensource.org/licenses/MIT).
+- [`.vscode/extensions.json`](.vscode/extensions.json): This project has a VS Extension recommendation, too. See the following file:
+- [`prettier.config.js`](prettier.config.js): We use [Prettier](https://prettier.io/) for code formatting and this is the corresponding [config file](https://prettier.io/docs/en/configuration.html).
+- [`.prettierignore`](.prettierignore): With this file Prettier will not format generated files.
+- [`.gitignore`](.gitignore): We ignore dependencies and meta data/generated files in Git. See [here](https://git-scm.com/docs/gitignore) to learn more.
+- [`package.json`](package.json): This file contains our [workspace configuration](https://yarnpkg.com/lang/en/docs/workspaces/), because our projects contains _multiple_ packages. It also contains top-level dependencies and commands.
 - TODO: `.travis.yml`
 - TODO: `settings.json`
 - TODO: `launch.json` - bigger explanation in different section
