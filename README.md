@@ -63,16 +63,18 @@ Before we dive into one of our packages I'll give you a short overview about the
 - [`prettier.config.js`](prettier.config.js): We use [Prettier](https://prettier.io/) for code formatting and this is the corresponding [config file](https://prettier.io/docs/en/configuration.html).
 - [`.prettierignore`](.prettierignore): With this file Prettier will not format generated files.
 - [`.gitignore`](.gitignore): We ignore dependencies and meta data/generated files in Git. See [here](https://git-scm.com/docs/gitignore) to learn more.
-- [`package.json`](package.json): This file contains our [workspace configuration](https://yarnpkg.com/lang/en/docs/workspaces/), because our projects contains _multiple_ packages. It also contains top-level dependencies and commands.
-- TODO: `.travis.yml` https://travis-ci.org/donaldpipowitch/how-to-create-a-language-server-and-vscode-extension
-- TODO: `settings.json`
-- TODO: `launch.json` - bigger explanation in different section
+- [`package.json`](package.json): This file contains our [workspace configuration](https://yarnpkg.com/lang/en/docs/workspaces/), because our projects contains _multiple_ packages. It also contains top-level dependencies and commands like `build` and `lint`. (The `lint` command will run Prettier.)
+- [`.travis.yml`](.travis.yml): This is the config file for [Travis](https://travis-ci.org/), our [CI system](https://martinfowler.com/articles/continuousIntegration.html). We'll run `build` and `lint` on every commit for example. You can find our CI logs [here](https://travis-ci.org/donaldpipowitch/how-to-create-a-language-server-and-vscode-extension).
+- [`.vscode/settings.json`](.vscode/settings.json): This file contains some shared VS Code configs. You'll get these settings automatically, if you open this project with VS Code.
+- [`.vscode/launch.json`](.vscode/launch.json): This file contains some script/launch configurations which we'll need later on for debugging purposes. I'll explain this in more detail later in the article.
+- [`tsconfig.base.json`](tsconfig.base.json): This file contains our shared TypeScript configs. I just want to point out, that I always try to use [`strict: true`](https://blog.mariusschulz.com/2017/06/09/typescript-2-3-the-strict-compiler-option) for better type safety.
+- [`yarn.lock`](yarn.lock): This file contains the last known working versions of our dependencies. Read [here](https://yarnpkg.com/lang/en/docs/yarn-lock/) to learn more.
 
-These are our packages we will create:
+Our configurations and meta files out of the way we'll have a look into the [`packages/`](packages) directory. This directory contains the packages, we already explained these packages above:
 
-- `packages/core`: this package provides all the functionality we want to expose in our extension - but without any of the language server specific functionality
-- `packages/server`: our language server
-- `packages/client`: our client for the language server which is our VS Code extension
+- [`packages/core`](packages/core): This directory contains `@donaldpipowitch/vscode-extension-core`.
+- [`packages/server`](packages/server): Here we can find `@donaldpipowitch/vscode-extension-server`.
+- [`packages/client`](packages/client): Last, but not least - `@donaldpipowitch/vscode-extension-client`.
 
 Why do we have a `core` package in the first place? Many frameworks and tools add language server on top of their original functionality. Think of ESLint (https://eslint.org/) which works standalone from the ESLint language server (https://github.com/Microsoft/vscode-eslint/blob/master/server). We do the same. It makes it also easier to learn what is actually language server specific and what not in my experience.
 
