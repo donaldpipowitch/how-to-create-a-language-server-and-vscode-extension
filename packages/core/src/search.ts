@@ -61,7 +61,9 @@ export function search(value: string): SearchRequest {
       filters: [
         {
           criteria: [
+            // which visual studio app? code
             { filterType: 8, value: 'Microsoft.VisualStudio.Code' },
+            // our search value
             { filterType: 10, value }
           ],
           pageSize: 10,

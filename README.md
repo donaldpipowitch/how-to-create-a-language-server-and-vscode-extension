@@ -70,13 +70,121 @@ Before we dive into one of our packages I'll give you a short overview about the
 - [`tsconfig.base.json`](tsconfig.base.json): This file contains our shared TypeScript configs. I just want to point out, that I always try to use [`strict: true`](https://blog.mariusschulz.com/2017/06/09/typescript-2-3-the-strict-compiler-option) for better type safety.
 - [`yarn.lock`](yarn.lock): This file contains the last known working versions of our dependencies. Read [here](https://yarnpkg.com/lang/en/docs/yarn-lock/) to learn more.
 
-Our configurations and meta files out of the way we'll have a look into the [`packages/`](packages) directory. This directory contains the packages, we already explained these packages above:
+Our configurations and meta files out of the way we'll have a look into the [`packages/`](packages) directory. This directory contains all the packages which we briefly explained above:
 
 - [`packages/core`](packages/core): This directory contains `@donaldpipowitch/vscode-extension-core`.
 - [`packages/server`](packages/server): Here we can find `@donaldpipowitch/vscode-extension-server`.
 - [`packages/client`](packages/client): Last, but not least - `@donaldpipowitch/vscode-extension-client`.
 
-Why do we have a `core` package in the first place? Many frameworks and tools add language server on top of their original functionality. Think of ESLint (https://eslint.org/) which works standalone from the ESLint language server (https://github.com/Microsoft/vscode-eslint/blob/master/server). We do the same. It makes it also easier to learn what is actually language server specific and what not in my experience.
+Maybe you are wondering why we have a `core` package and not just the server and the client (which is our extension)? Many frameworks and tools add language server on top of their original functionality. Think of ESLint (https://eslint.org/) which works standalone from the ESLint language server (https://github.com/Microsoft/vscode-eslint/blob/master/server). We do the same. This is useful so others can build on top of our logic - but without the need to load language server specific dependencies. This could be useful for small libs and CLIs. Besides that it makes it easier to show you which part of code is actually language server specific and which not.
+
+Let's start with our `core` package.
+
+## Creating `@donaldpipowitch/vscode-extension-core`
+
+The core package exports a function called `search` which takes a search value to look for VS Code extensions. We actually use the _Visual Studio MarketPlace API_ here, which is **not public** and **could break at any time** ([not just my words](https://twitter.com/ErichGamma/status/1029758007272505350)). You normally probably wouldn't want to rely on this, but for the sake of a tutorial it should be fine.
+
+We'll use [`axios`](https://github.com/axios/axios) and we want the caller of our `search` function to be able to _cancel_ our request, so we'll return not just an awaitable `request` object (which fulfills to an array of extensions on success), but also a `cancel` method. If the caller calls `cancel` the `request` will be fulfilled as `undefined`. All in all the request should be relatively straightforward if you used `axios` before.
+
+This is our [`src/search.ts`](packages/core/src/search.ts):
+
+```ts
+import axios, { Canceler } from 'axios';
+
+export { Canceler };
+
+/**
+ * In the `.vscode/extensions.json` we'll need to use `${publisher.publisherName}.${extensionName}`.
+ *
+ * @example
+ * {
+ *   "publisher": {
+ *     "publisherId": "d16f4e39-2ffb-44e3-9c0d-79d873570e3a",
+ *     "publisherName": "esbenp",
+ *     "displayName": "Esben Petersen",
+ *     "flags": "none"
+ *   },
+ *   "extensionId": "96fa4707-6983-4489-b7c5-d5ffdfdcce90",
+ *   "extensionName": "prettier-vscode",
+ *   "displayName": "Prettier - Code formatter",
+ *   "flags": "validated, public",
+ *   "lastUpdated": "2018-08-09T12:05:04.413Z",
+ *   "publishedDate": "2017-01-10T19:52:02.703Z",
+ *   "releaseDate": "2017-01-10T19:52:02.703Z",
+ *   "shortDescription": "VS Code plugin for prettier/prettier",
+ *   "deploymentType": 0
+ * }
+ */
+export type Extension = {
+  publisher: {
+    publisherId: string;
+    publisherName: string;
+    displayName: string;
+    flags: string;
+  };
+  extensionId: string;
+  extensionName: string;
+  displayName: string;
+  flags: string;
+  lastUpdated: string;
+  publishedDate: string;
+  releaseDate: string;
+  shortDescription: string;
+  deploymentType: number;
+};
+
+export type SearchRequest = {
+  cancel: Canceler;
+  request: Promise<Extension[] | void>;
+};
+
+export function search(value: string): SearchRequest {
+  const { token, cancel } = axios.CancelToken.source();
+  const options = {
+    cancelToken: token,
+    url:
+      'https://marketplace.visualstudio.com/_apis/public/gallery/extensionquery',
+    method: 'post',
+    headers: {
+      accept: 'application/json;api-version=5.0-preview.1;excludeUrls=true'
+    },
+    data: {
+      filters: [
+        {
+          criteria: [
+            // which visual studio app? code
+            { filterType: 8, value: 'Microsoft.VisualStudio.Code' },
+            // our search value
+            { filterType: 10, value }
+          ],
+          pageSize: 10,
+          pageNumber: 1
+        }
+      ]
+    }
+  };
+  const request = axios(options)
+    .then(({ data }) => data.results[0].extensions as Extension[])
+    .catch((error) => {
+      if (!axios.isCancel(error)) {
+        throw error;
+      }
+    });
+  return { request, cancel };
+}
+```
+
+Our [`src/index.ts`](packages/core/src/index.ts) just takes care of re-exporting this:
+
+```ts
+export * from './search';
+```
+
+For the sake of completeness we also have [`src/tsconfig.json`](packages/core/src/tsconfig.json) which extends from our [`tsconfig.base.json`](tsconfig.base.json) in our project root and takes care of setting our output directory.
+
+Our [`package.json`](packages/core/package.json) is also quite straightforward as it doesn't contain any language server specific metadata. The package can be build by calling `$ yarn build` or `$ yarn watch`.
+
+---
 
 Note: Our `client` package needs to run `"postinstall": "vscode-install"` to generate the correct `vscode` typings needed at build time. If you get `''vscode'' has no exported member 'X'.` errors in some of your libs (like `vscode-languageclient`) these libs and your package probably require a different VS Code version. In our case we defined `"vscode": "^1.25.0"` in the `"engines"` section of `packages/client/package.json` which is the same used by `vscode-languageclient` at the time I'm writing this.
 
