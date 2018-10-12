@@ -6,7 +6,8 @@
   "scripts": {
     "build": "wsrun build --exclude-missing --serial",
     "lint": "prettier --loglevel warn --write \"**/*.{ts,tsx,json,md}\"",
-    "ci": "yarn build && yarn lint"
+    "unit": "wsrun unit --exclude-missing --serial",
+    "ci": "yarn build && yarn lint && yarn unit"
   },
   "devDependencies": {
     "prettier": "^1.14.2",
