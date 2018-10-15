@@ -184,6 +184,33 @@ For the sake of completeness we also have [`src/tsconfig.json`](packages/core/sr
 
 Our [`package.json`](packages/core/package.json) is also quite straightforward as it doesn't contain any language server specific metadata. The package can be build by calling `$ yarn build` or `$ yarn watch`.
 
+I'll also add some small unit tests. We'll use [Jest](https://jestjs.io/) as our testing framework. Together with the [`ts-jest`](https://github.com/kulshekhar/ts-jest) our Jest config in [`tests/jest.config.js`](packages/core/tests/jest.config.js) is quite small. We just configured `testMatch` to treat every `.ts` file inside `tests/` as a test file. Note that we also have a [`tests/tsconfig.json`](packages/core/tests/tsconfig.json) so we can add Jest type declarations to our tests.
+
+[This](packages/core/tests/search.ts) is our test for the search API:
+
+```ts
+import axios from 'axios';
+import MockAdapter from 'axios-mock-adapter';
+import { search } from '../src/search';
+import prettierResponse from './__mocks__/prettier-response.json';
+
+const mock = new MockAdapter(axios);
+
+test('should search extensions', async () => {
+  mock.onAny().replyOnce(200, prettierResponse);
+  expect(await search('prettier').request).toMatchSnapshot();
+});
+
+test('should cancel search', async () => {
+  mock.onAny().replyOnce(200, prettierResponse);
+  const { request, cancel } = search('prettier');
+  cancel();
+  expect(await request).toBe(undefined);
+});
+```
+
+This will test a search and the cancelation of a search. The imported [`prettier-response.json`](packages/core/tests/__mocks__/prettier-response.json) is actually the saved response of a real search request against the API with the search query `prettier`.
+
 ---
 
 Note: Our `client` package needs to run `"postinstall": "vscode-install"` to generate the correct `vscode` typings needed at build time. If you get `''vscode'' has no exported member 'X'.` errors in some of your libs (like `vscode-languageclient`) these libs and your package probably require a different VS Code version. In our case we defined `"vscode": "^1.25.0"` in the `"engines"` section of `packages/client/package.json` which is the same used by `vscode-languageclient` at the time I'm writing this.
@@ -191,13 +218,3 @@ Note: Our `client` package needs to run `"postinstall": "vscode-install"` to gen
 - `"publisher": "vscode",` important
 - TODO: `launch.json`, debug test
 - `"window.openFoldersInNewWindow": "off",`; `--reuse-window` doesn't work
-
-# Core
-
-three APIs to get
-
-- extension data
-- extension url
-- search for extensions
-
-any ongoing request can be canceled
