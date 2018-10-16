@@ -24,7 +24,8 @@
       "protocol": "inspector",
       "port": 6009,
       "sourceMaps": true,
-      "outFiles": ["${workspaceRoot}/packages/server/dist/**/*.js"]
+      "outFiles": ["${workspaceRoot}/packages/server/dist/**/*.js"],
+      "timeout": 30000
     }
     // {
     //   "name": "Language Server E2E Test",
