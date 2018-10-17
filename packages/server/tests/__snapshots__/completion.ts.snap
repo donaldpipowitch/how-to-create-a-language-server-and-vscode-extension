@@ -1,0 +1,66 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`should provide completion items 1`] = `
+Array [
+  Object {
+    "detail": "Prettier - Code formatter",
+    "documentation": "VS Code plugin for prettier/prettier",
+    "kind": 1,
+    "label": "\\"esbenp.prettier-vscode",
+  },
+  Object {
+    "detail": "Prettier Now",
+    "documentation": "VS Code plugin for Prettier Miscellaneous / Code Formatter",
+    "kind": 1,
+    "label": "\\"remimarsal.prettier-now",
+  },
+  Object {
+    "detail": "Prettier - JavaScript formatter",
+    "documentation": "VS Code plugin for jlongster/prettier with tabs support",
+    "kind": 1,
+    "label": "\\"passionkind.prettier-vscode-with-tabs",
+  },
+  Object {
+    "detail": "Prettier - JavaScript formatter",
+    "documentation": "Fork of prettier-vscode: VS Code plugin for Skywalker13/prettier-space-parenthesis",
+    "kind": 1,
+    "label": "\\"schroeter.prettier-vscode-space-parenthesis",
+  },
+  Object {
+    "detail": "Prettier - JavaScript formatter",
+    "documentation": "prettier or prettier + standard --fix",
+    "kind": 1,
+    "label": "\\"bysabi.prettier-vscode-standard",
+  },
+  Object {
+    "detail": "Prettier - JavaScript formatter",
+    "documentation": "prettier or prettier + semistandard --fix",
+    "kind": 1,
+    "label": "\\"bysabi.prettier-vscode-semistandard",
+  },
+  Object {
+    "detail": "Prettier Fuge Standard",
+    "documentation": "prettier with fuge-standard",
+    "kind": 1,
+    "label": "\\"clmystes.prettier-fuge-standard",
+  },
+  Object {
+    "detail": "Prettier-Standard - JavaScript formatter",
+    "documentation": "VS Code plugin for prettier + standard",
+    "kind": 1,
+    "label": "\\"numso.prettier-standard-vscode",
+  },
+  Object {
+    "detail": "Prettier-Standard - JavaScript formatter",
+    "documentation": "VSCode plugin for prettier standard",
+    "kind": 1,
+    "label": "\\"iSayme.vscode-prettier-standard",
+  },
+  Object {
+    "detail": "MaxLint",
+    "documentation": "Maximum automatic linting by running lebab, Prettier, and ESLint",
+    "kind": 1,
+    "label": "\\"yaksoy.MaxLint",
+  },
+]
+`;

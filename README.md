@@ -184,7 +184,7 @@ For the sake of completeness we also have [`src/tsconfig.json`](packages/core/sr
 
 Our [`package.json`](packages/core/package.json) is also quite straightforward as it doesn't contain any language server specific metadata. The package can be build by calling `$ yarn build` or `$ yarn watch`.
 
-I'll also add some small unit tests. We'll use [Jest](https://jestjs.io/) as our testing framework. Together with the [`ts-jest`](https://github.com/kulshekhar/ts-jest) our Jest config in [`tests/jest.config.js`](packages/core/tests/jest.config.js) is quite small. We just configured `testMatch` to treat every `.ts` file inside `tests/` as a test file. Note that we also have a [`tests/tsconfig.json`](packages/core/tests/tsconfig.json) so we can add Jest type declarations to our tests.
+I'll also add some small unit tests. We'll use [Jest](https://jestjs.io/) as our testing framework. Together with the [`ts-jest`](https://github.com/kulshekhar/ts-jest) our Jest config in [`tests/jest.config.js`](packages/core/tests/jest.config.js) is quite small. We just configured `testMatch` to treat every `.ts` file inside `tests/` as a test file and we configured `testPathIgnorePatterns` to exclude the `__fixture__` directory. (I use fixtures in a similar way as explained in [this article](https://dev.to/davidimoore/using-fixtures-for-testing-a-reactredux-app-with-jest--enzyme-3hd0). For me a fixture is just some static data, so I haven't put it into the typicals `__mocks__` directory, because I don't mock the implementation of some module here, which is how mocks are [usually defined in Jest](https://jestjs.io/docs/en/manual-mocks).) Note that we also have a [`tests/tsconfig.json`](packages/core/tests/tsconfig.json) so we can add Jest type declarations to our tests.
 
 [This](packages/core/tests/search.ts) is our test for the search API:
 
@@ -192,24 +192,24 @@ I'll also add some small unit tests. We'll use [Jest](https://jestjs.io/) as our
 import axios from 'axios';
 import MockAdapter from 'axios-mock-adapter';
 import { search } from '../src/search';
-import prettierResponse from './__mocks__/prettier-response.json';
+import { prettier } from './__fixtures__/search-response';
 
 const mock = new MockAdapter(axios);
 
 test('should search extensions', async () => {
-  mock.onAny().replyOnce(200, prettierResponse);
+  mock.onAny().replyOnce(200, prettier);
   expect(await search('prettier').request).toMatchSnapshot();
 });
 
 test('should cancel search', async () => {
-  mock.onAny().replyOnce(200, prettierResponse);
+  mock.onAny().replyOnce(200, prettier);
   const { request, cancel } = search('prettier');
   cancel();
   expect(await request).toBe(undefined);
 });
 ```
 
-This will test a search and the cancelation of a search. The imported [`prettier-response.json`](packages/core/tests/__mocks__/prettier-response.json) is actually the saved response of a real search request against the API with the search query `prettier`.
+This will test a search and the cancelation of a search. The imported [`prettier` object](packages/core/tests/__fixtures__/search-response.ts) is actually the saved response of a real search request against the API with the search query `'prettier'`.
 
 ---
 
