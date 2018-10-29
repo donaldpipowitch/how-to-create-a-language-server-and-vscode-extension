@@ -4,5 +4,6 @@
     "declarationDir": "../dist",
     "outDir": "../dist",
     "types": ["node"]
-  }
+  },
+  "references": [{ "path": "../../server/src" }]
 }

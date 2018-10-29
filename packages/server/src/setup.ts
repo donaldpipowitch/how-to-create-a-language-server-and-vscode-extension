@@ -15,9 +15,7 @@ connection.onInitialize(() => ({
   // - code completion
   capabilities: {
     textDocumentSync: documents.syncKind,
-    completionProvider: {
-      resolveProvider: true
-    }
+    completionProvider: {}
   }
 }));
 

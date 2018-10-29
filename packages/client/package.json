@@ -23,9 +23,8 @@
   ],
   "scripts": {
     "postinstall": "vscode-install",
-    "vscode:prepublish": "cd client && npm run update-vscode && cd .. && npm run compile",
-    "build": "tsc -p src",
-    "watch": "tsc -p src -w"
+    "build": "tsc -b src",
+    "watch": "tsc -b src -w"
   },
   "dependencies": {
     "vscode": "^1.1.21",

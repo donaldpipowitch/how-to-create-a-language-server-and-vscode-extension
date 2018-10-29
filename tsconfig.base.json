@@ -1,7 +1,9 @@
 {
   "compilerOptions": {
     "allowSyntheticDefaultImports": true,
+    "composite": true,
     "declaration": true,
+    "declarationMap": true,
     "esModuleInterop": true,
     "lib": ["es6"],
     "module": "commonjs",
