@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`should provide completion items 1`] = `
+exports[`should provide completion items (search "prettier") 1`] = `
 Array [
   Object {
     "detail": "Prettier - Code formatter",
@@ -64,3 +64,9 @@ Array [
   },
 ]
 `;
+
+exports[`should provide no completion items (search term is too short) 1`] = `undefined`;
+
+exports[`should provide no completion items (triggered on "recommendations" property) 1`] = `undefined`;
+
+exports[`should provide no completion items (triggered on root) 1`] = `undefined`;
