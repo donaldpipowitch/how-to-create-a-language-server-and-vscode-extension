@@ -28,11 +28,11 @@
     "watch": "tsc -p src -w"
   },
   "dependencies": {
-    "vscode": "^1.0.0",
-    "vscode-languageclient": "^4.0.0"
+    "vscode": "^1.1.21",
+    "vscode-languageclient": "^5.1.1"
   },
   "devDependencies": {
     "@types/node": "^8.0.0",
-    "typescript": "^3.0.0"
+    "typescript": "^3.1.3"
   }
 }

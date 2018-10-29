@@ -4,13 +4,13 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "wsrun build --exclude-missing --serial",
+    "build": "wsrun --exclude-missing --serial build",
     "lint": "prettier --loglevel warn --write \"**/*.{ts,tsx,json,md}\"",
-    "unit": "wsrun unit --exclude-missing --serial",
+    "unit": "wsrun --exclude-missing --serial unit",
     "ci": "yarn build && yarn lint && yarn unit"
   },
   "devDependencies": {
-    "prettier": "^1.14.2",
-    "wsrun": "^2.2.1"
+    "prettier": "^1.14.3",
+    "wsrun": "^3.3.3"
   }
 }
