@@ -38,62 +38,57 @@ const setup = ({ text, offset }: { text: string; offset: number }) => {
 };
 
 test('should provide completion items (search "prettier")', async () => {
-  const { callCompletionHandler, resolveSearch } = setup({
-    text: `{
-  "recommendations": ["prettier"]
-}`,
-    offset: 24 // the `"`, before `prettier"]`
-  });
-  const itemsPromise = callCompletionHandler();
-  resolveSearch();
+  const text = '{"recommendations": ["prettier"]}';
+  const offset = 21; // the `"`, before `prettier"]`
+
+  const mocks = setup({ text, offset });
+
+  const itemsPromise = mocks.callCompletionHandler();
+  mocks.resolveSearch();
   expect(await itemsPromise).toMatchSnapshot();
 });
 
 test('should provide no completion items (search term is too short)', async () => {
-  const { callCompletionHandler, resolveSearch } = setup({
-    text: `{
-  "recommendations": ["p"]
-}`,
-    offset: 24 // the `"`, before `p"]`
-  });
-  const itemsPromise = callCompletionHandler();
-  resolveSearch();
+  const text = '{"recommendations": ["p"]}';
+  const offset = 21; // the `"`, before `p"]`
+
+  const mocks = setup({ text, offset });
+
+  const itemsPromise = mocks.callCompletionHandler();
+  mocks.resolveSearch();
   expect(await itemsPromise).toMatchSnapshot();
 });
 
 test('should provide no completion items (triggered on "recommendations" property)', async () => {
-  const { callCompletionHandler, resolveSearch } = setup({
-    text: `{
-  "recommendations": ["prettier"]
-}`,
-    offset: 4 // the `"`, before `recommendations"`
-  });
-  const itemsPromise = callCompletionHandler();
-  resolveSearch();
+  const text = '{"recommendations": ["prettier"]}';
+  const offset = 1; // the `"`, before `recommendations"`
+
+  const mocks = setup({ text, offset });
+
+  const itemsPromise = mocks.callCompletionHandler();
+  mocks.resolveSearch();
   expect(await itemsPromise).toMatchSnapshot();
 });
 
 test('should provide no completion items (triggered on root)', async () => {
-  const { callCompletionHandler, resolveSearch } = setup({
-    text: `{
-  "recommendations": ["prettier"]
-}`,
-    offset: 0 // the initial {
-  });
-  const itemsPromise = callCompletionHandler();
-  resolveSearch();
+  const text = '{"recommendations": ["prettier"]}';
+  const offset = 0; // the initial `{`
+
+  const mocks = setup({ text, offset });
+
+  const itemsPromise = mocks.callCompletionHandler();
+  mocks.resolveSearch();
   expect(await itemsPromise).toMatchSnapshot();
 });
 
 test('should cancel, if completion handler is called again, before search was resolved', async () => {
-  const { callCompletionHandler, cancelSearch } = setup({
-    text: `{
-  "recommendations": ["prettier"]
-}`,
-    offset: 24 // the `"`, before `prettier"]`
-  });
-  const itemsPromise = callCompletionHandler();
-  callCompletionHandler();
+  const text = '{"recommendations": ["prettier"]}';
+  const offset = 21; // the `"`, before `prettier"]`
+
+  const mocks = setup({ text, offset });
+
+  const itemsPromise = mocks.callCompletionHandler();
+  mocks.callCompletionHandler(); // call handler again, while search was not resolved
   expect(await itemsPromise).toBe(undefined);
-  expect(cancelSearch).toHaveBeenCalledTimes(1);
+  expect(mocks.cancelSearch).toHaveBeenCalledTimes(1);
 });
