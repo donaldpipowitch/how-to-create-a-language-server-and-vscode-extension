@@ -16,6 +16,15 @@ If you're just interested in _using_ the `@donaldpipowitch/vscode-extension-*` p
 | [`@donaldpipowitch/vscode-extension-server`](packages/server/README.md) | A .vscode/extensions.json language server.                            |
 | [`@donaldpipowitch/vscode-extension-client`](packages/client/README.md) | A client for the .vscode/extensions.json language server.             |
 
+# Table of contents
+
+1. [Background](#background)
+2. [Goal of this language server](#goal-of-this-language-server)
+3. [Initial setup](#initial-setup)
+4. [Basic project structure](#basic-project-structure)
+5. [Creating `@donaldpipowitch/vscode-extension-core`](#creating-donaldpipowitchvscode-extension-core)
+6. [Creating `@donaldpipowitch/vscode-extension-server`](#creating-donaldpipowitchvscode-extension-server)
+
 ## Background
 
 In this article you will learn how you can create a language server and a VS Code extension which uses this language server. A language server adds features like _autocomplete_, _go to definition_ or _documentation on hover_ to a programming language, to domain specific languages, but also to frameworks and configuration files, if it can't be covered by the language alone.
@@ -211,7 +220,19 @@ test('should cancel search', async () => {
 
 This will test a search and the cancelation of a search. The imported [`prettier` object](packages/core/tests/__fixtures__/search-response.ts) is actually the saved response of a real search request against the API with the search query `'prettier'`.
 
+## Creating `@donaldpipowitch/vscode-extension-server`
+
+**TODO**
+
 ---
+
+Thank you for reading this article. ♥
+
+I highly appreciate pull requests for grammar and spelling fixes as I'm not a native speaker as well as pull requests to make the code simpler and more idiomatic. Thank you!
+
+---
+
+# My own TODOs and notes
 
 Note: Our `client` package needs to run `"postinstall": "vscode-install"` to generate the correct `vscode` typings needed at build time. If you get `''vscode'' has no exported member 'X'.` errors in some of your libs (like `vscode-languageclient`) these libs and your package probably require a different VS Code version. In our case we defined `"vscode": "^1.25.0"` in the `"engines"` section of `packages/client/package.json` which is the same used by `vscode-languageclient` at the time I'm writing this.
 
