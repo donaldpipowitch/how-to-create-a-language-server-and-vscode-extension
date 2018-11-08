@@ -22,8 +22,8 @@ If you're just interested in _using_ the `@donaldpipowitch/vscode-extension-*` p
 2. [Goal of this language server](#goal-of-this-language-server)
 3. [Initial setup](#initial-setup)
 4. [Basic project structure](#basic-project-structure)
-5. [Creating `@donaldpipowitch/vscode-extension-core`](#creating-donaldpipowitchvscode-extension-core)
-6. [Creating `@donaldpipowitch/vscode-extension-server`](#creating-donaldpipowitchvscode-extension-server)
+5. [Creating `@donaldpipowitch/vscode-extension-core` and add search](#creating-donaldpipowitchvscode-extension-core-and-add-search)
+6. [Creating `@donaldpipowitch/vscode-extension-server` and add code completion](#creating-donaldpipowitchvscode-extension-server-and-add-code-completion)
 
 ## Background
 
@@ -89,11 +89,11 @@ Maybe you are wondering why we have a `core` package and not just the server and
 
 Let's start with our `core` package.
 
-## Creating `@donaldpipowitch/vscode-extension-core`
+## Creating `@donaldpipowitch/vscode-extension-core` and add search
 
 The core package exports a function called `search` which takes a search value to look for VS Code extensions. We actually use the _Visual Studio MarketPlace API_ here, which is **not public** and **could break at any time** ([not just my words](https://twitter.com/ErichGamma/status/1029758007272505350)). You normally probably wouldn't want to rely on this, but for the sake of a tutorial it should be fine.
 
-We'll use [`axios`](https://github.com/axios/axios) and we want the caller of our `search` function to be able to _cancel_ our request, so we'll return not just an awaitable `request` object (which fulfills to an array of extensions on success), but also a `cancel` method. If the caller calls `cancel` the `request` will be fulfilled as `undefined`. All in all the request should be relatively straightforward if you used `axios` before.
+We'll use [`axios`](https://github.com/axios/axios) to make requests against the MarketPlace API and we want the caller of our `search` function to be able to _cancel_ our request, so we'll return not just an awaitable `request` object (which fulfills to an array of extensions on success), but also a `cancel` method. If the caller calls `cancel` the `request` will be fulfilled as `undefined`. All in all the request should be relatively straightforward if you used `axios` before.
 
 This is our [`src/search.ts`](packages/core/src/search.ts):
 
@@ -193,6 +193,17 @@ For the sake of completeness we also have [`src/tsconfig.json`](packages/core/sr
 
 Our [`package.json`](packages/core/package.json) is also quite straightforward as it doesn't contain any language server specific metadata. The package can be build by calling `$ yarn build` or `$ yarn watch`.
 
+You can easily test our package, if you build our package, run `node` inside `packages/core` and try out our package like this (and press `Ctrl+C` twice at the end to exit again):
+
+```
+$ cd packages/core
+$ yarn build
+$ node
+> require('./dist').search('prettier').request.then(console.log)
+```
+
+This requires our package, calls `search` with the value `'prettier'` and `console.log`'s the result.
+
 I'll also add some small unit tests. We'll use [Jest](https://jestjs.io/) as our testing framework. Together with the [`ts-jest`](https://github.com/kulshekhar/ts-jest) our Jest config in [`tests/jest.config.js`](packages/core/tests/jest.config.js) is quite small. We just configured `testMatch` to treat every `.ts` file inside `tests/` as a test file and we configured `testPathIgnorePatterns` to exclude the `__fixture__` directory. (I use fixtures in a similar way as explained in [this article](https://dev.to/davidimoore/using-fixtures-for-testing-a-reactredux-app-with-jest--enzyme-3hd0). For me a fixture is just some static data, so I haven't put it into the typicals `__mocks__` directory, because I don't mock the implementation of some module here, which is how mocks are [usually defined in Jest](https://jestjs.io/docs/en/manual-mocks).) Note that we also have a [`tests/tsconfig.json`](packages/core/tests/tsconfig.json) so we can add Jest type declarations to our tests.
 
 [This](packages/core/tests/search.ts) is our test for the search API:
@@ -220,7 +231,149 @@ test('should cancel search', async () => {
 
 This will test a search and the cancelation of a search. The imported [`prettier` object](packages/core/tests/__fixtures__/search-response.ts) is actually the saved response of a real search request against the API with the search query `'prettier'`.
 
-## Creating `@donaldpipowitch/vscode-extension-server`
+## Creating `@donaldpipowitch/vscode-extension-server` and add code completion
+
+The server package creates language server which offers code completion functionality for VS Code extensions in `.vscode/extensions.json` files.
+
+We'll use [`vscode-languageserver`](https://github.com/Microsoft/vscode-languageserver-node) which is a framework to create a language server. AFAIK it is not _tied_ to VS Code, it was only created by the VS Code team. The description also just says that it is a [_"Language server implementation for node"_](https://github.com/Microsoft/vscode-languageserver-node/blob/3c48412e5f019ddc61a43cc2e0ed3bbcfd08696c/server/package.json#L3). Additionally we'll use [`jsonc-parser`](https://github.com/Microsoft/node-jsonc-parser) to parse our `.vscode/extensions.json` file. We need this to check if the user requests a code completion for an item in `recommendations[]`/`unwantedRecommendations[]` or if the user requests a code completion for someting completely different.
+
+Structure and config wise (e.g. the `src/tsconfig.json`, `package.json`, the unit tests) is similar to the [core package](#creating-donaldpipowitchvscode-extension-core-and-add-search).
+
+Let's have a look at our [`src/index.ts`](packages/server/src/index.ts). This should give us a good overview of what happens in this package:
+
+```ts
+import { connection, documents } from './setup';
+import { configureCompletion } from './completion';
+
+configureCompletion(connection, documents);
+```
+
+As you can see we import a `connection` and `documents` from some setup file and pass them to a function called `configureCompletion`. So what are `connection`, `documents` and `configureCompletion` exactly?
+
+`connection` and `documents` are terms coming from the `vscode-languageserver` package. A connection - in my understanding - is the actual _server_ we think of when we say _language server_. The connection takes requests from a client and responds to them. A connection can take some configurations as you will soon see. For example a connection can say that it offers certain features (called _capabilities_) like code completion. `documents` is an instance of `TextDocuments` which is exported by `vscode-languageserver`. As far as I understand the `TextDocuments` syncs which files have been opened/changed/closed between the client and the server. We use it to retrieve our `.vscode/extensions.json`.
+
+Let's have a look at [`src/setup.ts`](packages/server/src/setup.ts) first:
+
+```ts
+import { createConnection, TextDocuments } from 'vscode-languageserver';
+
+const connection = createConnection();
+
+// text document manager (supports full document sync only)
+const documents = new TextDocuments();
+
+connection.onInitialize(() => ({
+  // tells the client what we support:
+  // - full text sync
+  // - code completion
+  capabilities: {
+    textDocumentSync: documents.syncKind,
+    completionProvider: {}
+  }
+}));
+
+// Listen for events
+documents.listen(connection);
+connection.listen();
+
+export { connection, documents };
+```
+
+As I said earlier we create a `connection` (our actually server) and an instance of `TextDocuments` (to let our server know which documents are opened and changed in the client). We set an `onInitialize` handler which returns a configuration which contains `capabilities`. These `capabilities` tell the client which features our server supports. With `textDocumentSync: documents.syncKind` we tell the client that we support _full text syncs_ (e.g. the whole document is synced between client and server) and with `completionProvider: {}` we tell the client that our server offers code completion (as you'll soon see). The `{}` is actually needed here! You _can_ configure the `completionProvider` a little bit, but we don't need to do that. But because `completionProvider` can't be just `true` we need to set it to an empty object.
+
+After that we pass `connection` to our `documents` (with `documents.listen(connection)`) and tell the `connection` to listen for any requests from any client. At the end both are exported, so we can use them inside [`src/index.ts`](packages/server/src/index.ts) as we saw earlier.
+
+Now let's have a look at [`src/completion.ts`](packages/server/src/completion.ts) and we do it in _two parts_. First well have a look at tge exported `configureCompletion` function which was already used inside [`src/index.ts`](packages/server/src/index.ts):
+
+```ts
+import { search, Canceler } from '@donaldpipowitch/vscode-extension-core';
+import {
+  TextDocuments,
+  CompletionItemKind,
+  Connection
+} from 'vscode-languageserver';
+import { parseTree, findNodeAtOffset, Node } from 'jsonc-parser';
+
+let lastCancel: Canceler | null = null;
+
+export function configureCompletion(
+  connection: Connection,
+  documents: TextDocuments
+) {
+  // The onCompletion handler provides the initial list of the completion items.
+  // This is an example of the params passed to the handler:
+  // {
+  //   "textDocument": {
+  //     "uri": "file:///Users/pipo/workspace/test-txt/test.txt"
+  //   },
+  //   "position": {
+  //     "line": 0,
+  //     "character": 10
+  //   },
+  //   "context": {
+  //     "triggerKind": 1
+  //   }
+  // }
+  connection.onCompletion(async ({ position, textDocument }) => {
+    if (lastCancel) {
+      lastCancel();
+      lastCancel = null;
+    }
+
+    if (!textDocument.uri.endsWith('.vscode/extensions.json')) return;
+
+    const document = documents.get(textDocument.uri);
+    if (!document) return;
+
+    const tree = parseTree(document.getText());
+    const node = findNodeAtOffset(tree, document.offsetAt(position));
+
+    if (!isExtensionValue(node)) return;
+
+    // only search for queries with at least three characters
+    if (node.value && node.value.length <= 2) return;
+
+    const query = node.value;
+    // connection.console.log(`You searched for ${query}.`);
+
+    const { cancel, request } = search(query);
+    lastCancel = cancel;
+
+    const extensions = await request;
+    lastCancel = null;
+
+    if (!extensions) return;
+
+    const completionItems = extensions.map(
+      ({
+        publisher: { publisherName },
+        extensionName,
+        displayName,
+        shortDescription
+      }) => ({
+        // `"` hack, because JSON treats `"` as part of the completion here
+        // see https://github.com/Microsoft/vscode-extension-samples/issues/93#issuecomment-429849514
+        label: `"${publisherName}.${extensionName}`,
+        kind: CompletionItemKind.Text,
+        detail: displayName,
+        documentation: shortDescription
+      })
+    );
+
+    return completionItems;
+  });
+}
+```
+
+That is a lot to cover! Let's try to break it down a little bit.
+
+`configureCompletion` has just one purpose: set a `onCompletion` handler on our `connection`. A client can basically ask at any time for any file on any position for possible _completion items_ (e.g. suggestion about what could be completed). Because it can happen at any time and because I search can take an unknown time to resolve, we check if there is a pending search (`if (lastCancel) {}`) and if there is a pending search, we cancel it.
+
+To handle the clients request correctly we get the `position` (e.g. the cursor position) and the `textDocument.uri` (basically the "file name"). With these two params we can check, if the client requests completion items for a `.vscode/extensions.json` file and the values of `recommendations[]` or `unwantedRecommendations[]`. If it is a different file we return early. If it _is_ a `.vscode/extensions.json` file we try to get its content - if it is not available we return as well. If we have the files content, we try to parse it (`const tree = parseTree(document.getText())`).
+
+So what is `tree`? This is the [abstract syntax _tree_](https://en.wikipedia.org/wiki/Abstract_syntax_tree) (or AST in short) which represents our JSON file in a way that it can be programmatically searched for example. With our `position` we can get the `node` inside the `tree` which the cursor position of the user currently highlights. The `node` is like an element inside the tree which can represent different things: a string value or an array or the property of an object or a comment... basically every language feature JSON(C) can support.
+
+We pass the `node` to a function called `isExtensionValue()`. We'll look at this function in a moment. For now you should only know that this function returns `true`, if `node` represents a string value inside `recommendations[]` or `unwantedRecommendations[]`. With other words: given a JSON file like `{ "recommendations": ["some-value"] }` than `isExtensionValue()` returns `true`, if the cursor is somewhere inside `"some-value"` and it returns `false` in all other cases.
 
 **TODO**
 

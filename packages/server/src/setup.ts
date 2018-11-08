@@ -1,10 +1,6 @@
-import {
-  createConnection,
-  TextDocuments,
-  ProposedFeatures
-} from 'vscode-languageserver';
+import { createConnection, TextDocuments } from 'vscode-languageserver';
 
-const connection = createConnection(ProposedFeatures.all);
+const connection = createConnection();
 
 // text document manager (supports full document sync only)
 const documents = new TextDocuments();
