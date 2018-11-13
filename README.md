@@ -268,7 +268,11 @@ connection.onInitialize(() => ({
   // - code completion
   capabilities: {
     textDocumentSync: documents.syncKind,
-    completionProvider: {}
+    completionProvider: {
+      triggerCharacters: [
+        ...'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-_"'
+      ]
+    }
   }
 }));
 
@@ -279,7 +283,7 @@ connection.listen();
 export { connection, documents };
 ```
 
-As I said earlier we create a `connection` (our actually server) and an instance of `TextDocuments` (to let our server know which documents are opened and changed in the client). We set an `onInitialize` handler which returns a configuration which contains `capabilities`. These `capabilities` tell the client which features our server supports. With `textDocumentSync: documents.syncKind` we tell the client that we support _full text syncs_ (e.g. the whole document is synced between client and server) and with `completionProvider: {}` we tell the client that our server offers code completion (as you'll soon see). The `{}` is actually needed here! You _can_ configure the `completionProvider` a little bit, but we don't need to do that. But because `completionProvider` can't be just `true` we need to set it to an empty object.
+As I said earlier we create a `connection` (our actually server) and an instance of `TextDocuments` (to let our server know which documents are opened and changed in the client). We set an `onInitialize` handler which returns a configuration which contains `capabilities`. These `capabilities` tell the client which features our server supports. With `textDocumentSync: documents.syncKind` we tell the client that we support _full text syncs_ (e.g. the whole document is synced between client and server) and with `completionProvider` we tell the client that our server offers code completion (as you'll soon see). Inside `completionProvider` we also specify all characters which trigger a completion. This are basically `a` to `Z`, `-` and `_` which can be part of the extension name as well as `"` which seems to be treated [as a part of a word in JSON](<(https://github.com/Microsoft/vscode-extension-samples/issues/93#issuecomment-429849514)>) (and our string begins with `"`). (⚠️ Disclaimer: I'm not enterily sure, if this is the correct way to do it, but only with this setting I could get reliable _complete while you type_ behaviour.)
 
 After that we pass `connection` to our `documents` (with `documents.listen(connection)`) and tell the `connection` to listen for any requests from any client. At the end both are exported, so we can use them inside [`src/index.ts`](packages/server/src/index.ts) as we saw earlier.
 
@@ -374,6 +378,20 @@ To handle the clients request correctly we get the `position` (e.g. the cursor p
 So what is `tree`? This is the [abstract syntax _tree_](https://en.wikipedia.org/wiki/Abstract_syntax_tree) (or AST in short) which represents our JSON file in a way that it can be programmatically searched for example. With our `position` we can get the `node` inside the `tree` which the cursor position of the user currently highlights. The `node` is like an element inside the tree which can represent different things: a string value or an array or the property of an object or a comment... basically every language feature JSON(C) can support.
 
 We pass the `node` to a function called `isExtensionValue()`. We'll look at this function in a moment. For now you should only know that this function returns `true`, if `node` represents a string value inside `recommendations[]` or `unwantedRecommendations[]`. With other words: given a JSON file like `{ "recommendations": ["some-value"] }` than `isExtensionValue()` returns `true`, if the cursor is somewhere inside `"some-value"` and it returns `false` in all other cases.
+
+If our `node` is the value of an extension we check if it is at least two characters long, before we try to run a search.
+
+When we run the search, we save the `cancel` handler. Remember our initial check - if the search takes a long time and the client already asks for the next completion items we'll cancel the old search. When the search has finished we reset the `cancel` handler. Another thing to remember: if we canceled a search request than the request will be resolved to `undefined` and we just stop any further processing.
+
+Great! As our last step we just need to map our `extension`'s from the API to a _completion item_. The `kind` is `CompletionItemKind.Text` which means our completion item just represents some text (instead of something like a function a file or something like that). `label` is the actual value we want to complete to. It is basically `${publisherName}.${extensionName}`, but with a caveat - we need to prepend a `"`. You can find some discussion about this caveat [here](https://github.com/Microsoft/vscode-extension-samples/issues/93#issuecomment-429849514). Apparently the `"` is treated as a part of the completable value. I'm not sure if this is a bug or not, but we need to respect it. `detail` acts like a _title_ in the extended view of the completion UI while `documentation` acts like a small _description_ below the _title_.
+
+Note that the completion can be either triggered just by writing or by pressing `Ctrl` and `Space` (at least with your default settings).
+
+![an example of the completion UI](./assets/completion-example.png)
+
+Congratualions. Take a deep breath, make a small pause and maybe re-read the last section.
+
+Now let's have a look at the implementation of `isExtensionValue()`:
 
 **TODO**
 

@@ -11,7 +11,11 @@ connection.onInitialize(() => ({
   // - code completion
   capabilities: {
     textDocumentSync: documents.syncKind,
-    completionProvider: {}
+    completionProvider: {
+      triggerCharacters: [
+        ...'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-_"'
+      ]
+    }
   }
 }));
 
