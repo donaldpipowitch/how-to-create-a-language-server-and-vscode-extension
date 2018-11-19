@@ -22,10 +22,12 @@
     "workspaceContains:**/.vscode/extensions.json"
   ],
   "scripts": {
+    "postinstall": "vscode-install",
     "build": "tsc -b src",
     "watch": "tsc -b src -w"
   },
   "dependencies": {
+    "vscode": "^1.1.21",
     "vscode-languageclient": "^5.1.1"
   },
   "devDependencies": {

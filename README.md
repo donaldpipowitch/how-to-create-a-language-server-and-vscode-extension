@@ -489,6 +489,8 @@ For more examples you can have a look at the [test file](packages/server/tests/c
 
 **TODO**
 
+("postinstall": "vscode-install" is needed by vscode-languageclient.)
+
 ---
 
 Thank you for reading this article. ♥
