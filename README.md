@@ -13,8 +13,8 @@ If you're just interested in _using_ the `@donaldpipowitch/vscode-extension-*` p
 | Package                                                                 | Description                                                           |
 | ----------------------------------------------------------------------- | --------------------------------------------------------------------- |
 | [`@donaldpipowitch/vscode-extension-core`](packages/core/README.md)     | Exports some useful APIs to get information about VS Code extensions. |
-| [`@donaldpipowitch/vscode-extension-server`](packages/server/README.md) | A .vscode/extensions.json language server.                            |
-| [`@donaldpipowitch/vscode-extension-client`](packages/client/README.md) | A client for the .vscode/extensions.json language server.             |
+| [`@donaldpipowitch/vscode-extension-server`](packages/server/README.md) | A `.vscode/extensions.json` language server.                          |
+| [`@donaldpipowitch/vscode-extension-client`](packages/client/README.md) | A client for the `.vscode/extensions.json` language server.           |
 
 # Table of contents
 
@@ -24,6 +24,7 @@ If you're just interested in _using_ the `@donaldpipowitch/vscode-extension-*` p
 4. [Basic project structure](#basic-project-structure)
 5. [Creating `@donaldpipowitch/vscode-extension-core` and add search](#creating-donaldpipowitchvscode-extension-core-and-add-search)
 6. [Creating `@donaldpipowitch/vscode-extension-server` and add code completion](#creating-donaldpipowitchvscode-extension-server-and-add-code-completion)
+7. [Creating `@donaldpipowitch/vscode-extension-client` and test everything](#creating-donaldpipowitchvscode-extension-client-and-test-everything)
 
 ## Background
 
@@ -392,6 +393,99 @@ Note that the completion can be either triggered just by writing or by pressing 
 Congratualions. Take a deep breath, make a small pause and maybe re-read the last section.
 
 Now let's have a look at the implementation of `isExtensionValue()`:
+
+```ts
+function isExtensionValue(node: Node | undefined): node is Node {
+  // no node
+  if (!node) return false;
+  // not a string node
+  if (node.type !== 'string') return false;
+  // not within an array
+  if (!node.parent) return false;
+  if (node.parent.type !== 'array') return false;
+  // not on a "recommendations" or "unwantedRecommendations" property
+  if (!node.parent.parent) return false;
+  if (node.parent.parent.type !== 'property') return false;
+  if (
+    node.parent.parent.children![0].value !== 'recommendations' &&
+    node.parent.parent.children![0].value !== 'unwantedRecommendations'
+  )
+    return false;
+  // not on an object
+  if (!node.parent.parent.parent) return false;
+  if (node.parent.parent.parent.type !== 'object') return false;
+  // not the root
+  if (node.parent.parent.parent.parent) return false;
+  // whoohoo
+  return true;
+}
+```
+
+This looks a little bit complicated, but should actually be quite straightforward. We just make sure our `node` exists, is a string inside an array of a prop which is called `recommendations` or `unwantedRecommendations` of an object in the root. If yes, we return `true`.
+
+The only thing left for the server are a couple of small unit tests for the code completion which you can find [here](packages/server/tests/completion.ts). The completion logic depends on three things: our `connection`, our `documents` and our `search` from the `core`. We'll need to mock these three things in a `setup` function which we can call inside every test. For the `search` we'll use a fixture of a saved search for _"prettier"_ which you can find [here](packages/server/tests/__fixtures__/search.ts). `documents` will just return some `text` and `offset` which we can pass into `setup` - these are _the only things_ which we'll change between tests for now. The interesting part is in the mock for `connection`. Here we use the `onCompletion` mock to retrieve our actual `completionHandler`, so we can call it manually inside a test. This is our final `setup`:
+
+```ts
+import * as core from '@donaldpipowitch/vscode-extension-core';
+import { configureCompletion } from '../src/completion';
+import { prettier } from './__fixtures__/search';
+
+const setup = ({ text, offset }: { text: string; offset: number }) => {
+  const search = jest.spyOn(core, 'search');
+  let resolve: Function;
+  const request = new Promise((_resolve) => (resolve = _resolve));
+  const cancel = jest.fn(() => resolve());
+  search.mockReturnValue({ cancel, request });
+
+  const mockedConnection = { onCompletion: jest.fn() };
+  const mockedDocuments = {
+    get() {
+      return {
+        getText() {
+          return text;
+        },
+        offsetAt() {
+          return offset;
+        }
+      };
+    }
+  };
+  configureCompletion(mockedConnection as any, mockedDocuments as any);
+
+  expect(mockedConnection.onCompletion).toHaveBeenCalledTimes(1);
+  const completionHandler = mockedConnection.onCompletion.mock.calls[0][0];
+
+  return {
+    callCompletionHandler: () =>
+      completionHandler({
+        textDocument: { uri: '.vscode/extensions.json' }
+      }),
+    resolveSearch: () => resolve(prettier),
+    cancelSearch: cancel
+  };
+};
+```
+
+This is surely not the best code ever written, but it makes our tests quite readable.
+
+In this test for example we check for the succesful completion of a `prettier` search. We prepare our JSON file (`text`) and the cursor position (`offset`). We ask for completion items (`callCompletionHandler`), "wait" for the search (`resolveSearch`) and `await` the completion items (`itemsPromise`):
+
+```ts
+test('should provide completion items (search "prettier")', async () => {
+  const text = '{"recommendations": ["prettier"]}';
+  const offset = 21; // the `"`, before `prettier"]`
+
+  const mocks = setup({ text, offset });
+
+  const itemsPromise = mocks.callCompletionHandler();
+  mocks.resolveSearch();
+  expect(await itemsPromise).toMatchSnapshot();
+});
+```
+
+For more examples you can have a look at the [test file](packages/server/tests/completion.ts) (- they all look quite similar).
+
+## Creating `@donaldpipowitch/vscode-extension-client` and test everything
 
 **TODO**
 

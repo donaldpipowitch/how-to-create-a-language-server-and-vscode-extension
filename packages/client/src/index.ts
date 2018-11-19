@@ -1,4 +1,3 @@
-import { ExtensionContext } from 'vscode';
 import {
   LanguageClient,
   LanguageClientOptions,
@@ -8,7 +7,7 @@ import {
 
 let client: LanguageClient;
 
-export function activate(context: ExtensionContext) {
+export function activate() {
   const serverModule = require.resolve(
     '@donaldpipowitch/vscode-extension-server'
   );
@@ -28,19 +27,17 @@ export function activate(context: ExtensionContext) {
       {
         scheme: 'file',
         language: 'json'
-        // pattern: '**∕.vscode/extensions.json'
       },
       {
         scheme: 'file',
         language: 'jsonc'
-        // pattern: '**∕.vscode/extensions.json'
       }
     ]
   };
 
   client = new LanguageClient(
-    'languageServerExample',
-    'Language Server Example',
+    '@donaldpipowitch/vscode-extension-client',
+    'VS Code Extension Client',
     serverOptions,
     clientOptions
   );
