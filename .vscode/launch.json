@@ -1,4 +1,3 @@
-// A launch configuration that compiles the extension and then opens it inside a new window
 {
   "version": "0.2.0",
   "configurations": [
@@ -27,20 +26,6 @@
       "outFiles": ["${workspaceRoot}/packages/server/dist/**/*.js"],
       "timeout": 30000
     }
-    // {
-    //   "name": "Language Server E2E Test",
-    //   "type": "extensionHost",
-    //   "request": "launch",
-    //   "runtimeExecutable": "${execPath}",
-    //   "args": [
-    //     "--extensionDevelopmentPath=${workspaceRoot}",
-    //     "--extensionTestsPath=${workspaceRoot}/client/dist/test",
-    //     "${workspaceRoot}/client/testFixture"
-    //   ],
-    //   "stopOnEntry": false,
-    //   "sourceMaps": true,
-    //   "outFiles": ["${workspaceRoot}/packages/client/dist/test/**/*.js"]
-    // }
   ],
   "compounds": [
     {

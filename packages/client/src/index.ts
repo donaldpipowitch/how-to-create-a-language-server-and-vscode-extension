@@ -1,8 +1,7 @@
 import {
   LanguageClient,
   LanguageClientOptions,
-  ServerOptions,
-  TransportKind
+  ServerOptions
 } from 'vscode-languageclient';
 
 let client: LanguageClient;
@@ -14,22 +13,16 @@ export function activate() {
 
   // Debug options for server are used when we launch the extension in debug mode
   const serverOptions: ServerOptions = {
-    run: { module: serverModule, transport: TransportKind.ipc },
+    run: { module: serverModule },
     debug: {
       module: serverModule,
-      transport: TransportKind.ipc,
-      options: { execArgv: ['--nolazy', '--inspect=6009'] }
+      options: { execArgv: ['--inspect=6009'] }
     }
   };
 
   const clientOptions: LanguageClientOptions = {
     documentSelector: [
       {
-        scheme: 'file',
-        language: 'json'
-      },
-      {
-        scheme: 'file',
         language: 'jsonc'
       }
     ]

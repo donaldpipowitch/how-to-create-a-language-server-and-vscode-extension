@@ -11,10 +11,6 @@
     "url": "https://github.com/donaldpipowitch/how-to-create-a-language-server-and-vscode-extension"
   },
   "publisher": "vscode",
-  "categories": [],
-  "keywords": [
-    "vscode extension"
-  ],
   "engines": {
     "vscode": "^1.25.0"
   },
@@ -27,6 +23,7 @@
     "watch": "tsc -b src -w"
   },
   "dependencies": {
+    "@donaldpipowitch/vscode-extension-server": "^1.0.0",
     "vscode": "^1.1.21",
     "vscode-languageclient": "^5.1.1"
   },

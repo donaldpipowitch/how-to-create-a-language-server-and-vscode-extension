@@ -16,11 +16,11 @@
     "unit": "jest -c tests/jest.config.js"
   },
   "dependencies": {
+    "@donaldpipowitch/vscode-extension-core": "^1.0.0",
     "jsonc-parser": "^2.0.2",
     "vscode-languageserver": "^5.1.0"
   },
   "devDependencies": {
-    "@donaldpipowitch/vscode-extension-core": "^1.0.0",
     "@types/jest": "^23.3.8",
     "@types/node": "^8.0.0",
     "jest": "^23.6.0",

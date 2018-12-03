@@ -25,6 +25,7 @@ If you're just interested in _using_ the `@donaldpipowitch/vscode-extension-*` p
 5. [Creating `@donaldpipowitch/vscode-extension-core` and add search](#creating-donaldpipowitchvscode-extension-core-and-add-search)
 6. [Creating `@donaldpipowitch/vscode-extension-server` and add code completion](#creating-donaldpipowitchvscode-extension-server-and-add-code-completion)
 7. [Creating `@donaldpipowitch/vscode-extension-client` and test everything](#creating-donaldpipowitchvscode-extension-client-and-test-everything)
+8. [Our first release](#our-first-release)
 
 ## Background
 
@@ -52,9 +53,9 @@ We try to add these three features in this tutorial.
 
 The project was tested and developed with following technologies:
 
-- [VS Code](https://code.visualstudio.com/) (I used `1.28.0-insider`)
-- [Node](https://nodejs.org/en/) (I used `8.11.3`)
-- [yarn](https://yarnpkg.com/en/docs/install) (I used `1.9.4`)
+- [VS Code](https://code.visualstudio.com/) (I used `1.30.0-insider`)
+- [Node](https://nodejs.org/en/) (I used `8.14.0`, because _AFAIK_ VS Code currently bundles `node@8`)
+- [yarn](https://yarnpkg.com/en/docs/install) (I used `1.12.3`)
 - [Git](https://git-scm.com/) (I used `2.18.0`)
 
 If you have these requirements installed, you can setup the project with the following steps:
@@ -74,7 +75,7 @@ Before we dive into one of our packages I'll give you a short overview about the
 - [`.prettierignore`](.prettierignore): With this file Prettier will not format generated files.
 - [`.gitignore`](.gitignore): We ignore dependencies and meta data/generated files in Git. See [here](https://git-scm.com/docs/gitignore) to learn more.
 - [`package.json`](package.json): This file contains our [workspace configuration](https://yarnpkg.com/lang/en/docs/workspaces/), because our projects contains _multiple_ packages. It also contains top-level dependencies and commands like `build` and `lint`. (The `lint` command will run Prettier.)
-- [`.travis.yml`](.travis.yml): This is the config file for [Travis](https://travis-ci.org/), our [CI system](https://martinfowler.com/articles/continuousIntegration.html). We'll run `build` and `lint` on every commit for example. You can find our CI logs [here](https://travis-ci.org/donaldpipowitch/how-to-create-a-language-server-and-vscode-extension).
+- [`.travis.yml`](.travis.yml): This is the config file for [Travis](https://travis-ci.org/), our [CI system](https://martinfowler.com/articles/continuousIntegration.html). We'll build, lint and test our code on every commit. You can find our CI logs [here](https://travis-ci.org/donaldpipowitch/how-to-create-a-language-server-and-vscode-extension).
 - [`.vscode/settings.json`](.vscode/settings.json): This file contains some shared VS Code configs. You'll get these settings automatically, if you open this project with VS Code.
 - [`.vscode/launch.json`](.vscode/launch.json): This file contains some script/launch configurations which we'll need later on for debugging purposes. I'll explain this in more detail later in the article.
 - [`tsconfig.base.json`](tsconfig.base.json): This file contains our shared TypeScript configs. I just want to point out, that I always try to use [`strict: true`](https://blog.mariusschulz.com/2017/06/09/typescript-2-3-the-strict-compiler-option) for better type safety and `"types": []` to not load _every_ `@types/*` package by default (to avoid having `@types/jest` interfaces available in my non-test files for example).
@@ -236,7 +237,7 @@ This will test a search and the cancelation of a search. The imported [`prettier
 
 The server package creates language server which offers code completion functionality for VS Code extensions in `.vscode/extensions.json` files.
 
-We'll use [`vscode-languageserver`](https://github.com/Microsoft/vscode-languageserver-node) which is a framework to create a language server. AFAIK it is not _tied_ to VS Code, it was only created by the VS Code team. The description also just says that it is a [_"Language server implementation for node"_](https://github.com/Microsoft/vscode-languageserver-node/blob/3c48412e5f019ddc61a43cc2e0ed3bbcfd08696c/server/package.json#L3). Additionally we'll use [`jsonc-parser`](https://github.com/Microsoft/node-jsonc-parser) to parse our `.vscode/extensions.json` file. We need this to check if the user requests a code completion for an item in `recommendations[]`/`unwantedRecommendations[]` or if the user requests a code completion for someting completely different.
+We'll use [`vscode-languageserver`](https://github.com/Microsoft/vscode-languageserver-node) which is a framework to create a language server. AFAIK it is not _tied_ to VS Code, it was only created by the VS Code team. The description also just says that it is a [_"Language server implementation for node"_](https://github.com/Microsoft/vscode-languageserver-node/blob/3c48412e5f019ddc61a43cc2e0ed3bbcfd08696c/server/package.json#L3). Additionally we'll use [`jsonc-parser`](https://github.com/Microsoft/node-jsonc-parser) to parse our `.vscode/extensions.json` file. (By the way, JSONC is JSON with comments.) We need this to check if the user requests a code completion for an item in `recommendations[]`/`unwantedRecommendations[]` or if the user requests a code completion for someting completely different.
 
 Structure and config wise (e.g. the `src/tsconfig.json`, `package.json`, the unit tests) is similar to the [core package](#creating-donaldpipowitchvscode-extension-core-and-add-search).
 
@@ -388,7 +389,7 @@ Great! As our last step we just need to map our `extension`'s from the API to a 
 
 Note that the completion can be either triggered just by writing or by pressing `Ctrl` and `Space` (at least with your default settings).
 
-![an example of the completion UI](./assets/completion-example.png)
+![an example of the completion UI](assets/completion-example.png)
 
 Congratualions. Take a deep breath, make a small pause and maybe re-read the last section.
 
@@ -487,22 +488,131 @@ For more examples you can have a look at the [test file](packages/server/tests/c
 
 ## Creating `@donaldpipowitch/vscode-extension-client` and test everything
 
+The client package creates our VS Code extension and uses the language server. This package contains IDE-specific logic - in this case for VS Code.
+
+Let's begin with the [`package.json`](packages/client/package.json) this time, which contains some VS Code specific properties which I'll briefly explain. You can find all properties with descriptions and their allowed values [here](https://code.visualstudio.com/docs/extensionAPI/extension-manifest).
+
+```json
+{
+  // ...
+  "publisher": "vscode",
+  "engines": {
+    "vscode": "^1.25.0"
+  },
+  "activationEvents": ["workspaceContains:**/.vscode/extensions.json"],
+  "scripts": {
+    "postinstall": "vscode-install"
+    // ...
+  },
+  "dependencies": {
+    "@donaldpipowitch/vscode-extension-server": "^1.0.0",
+    "vscode": "^1.1.21",
+    "vscode-languageclient": "^5.1.1"
+  }
+  // ...
+}
+```
+
+`publisher` is a required field which represents the person or organisation which publishes this extension. I'll show you later how you create a _publisher_. `engines.vscode` is also required and specifies which VS Code versions your extension supports.
+
+`activationEvents` is not required. You use [activation events](https://code.visualstudio.com/docs/extensionAPI/activation-events) to tell VS Code _when_ your extension needs to be loaded, so your extension isn't loaded automatically in every project and slows you down, even if you don't need it. In this case I said that the extension should be loaded, if a `.vscode/extensions.json` file can be found in the workspace.
+
+`scripts.postinstall` calls a script called `vscode-install` provided by the [`vscode`](https://github.com/Microsoft/vscode-extension-vscode) package, which is a part of our `dependencies`. We don't use this package directly in our client, but it is needed by our other dependency [`vscode-languageclient`](https://github.com/Microsoft/vscode-languageserver-node). `vscode` depends on _our_ `engines.vscode` setting and generates some files like type declarations when we call `vscode-install`.
+
+Now we can dive into our [`src/index.ts`](packages/client/src/index.ts):
+
+```ts
+import {
+  LanguageClient,
+  LanguageClientOptions,
+  ServerOptions
+} from 'vscode-languageclient';
+
+let client: LanguageClient;
+
+export function activate() {
+  const serverModule = require.resolve(
+    '@donaldpipowitch/vscode-extension-server'
+  );
+
+  // Debug options for server are used when we launch the extension in debug mode
+  const serverOptions: ServerOptions = {
+    run: { module: serverModule },
+    debug: {
+      module: serverModule,
+      options: { execArgv: ['--nolazy', '--inspect=6009'] }
+    }
+  };
+
+  const clientOptions: LanguageClientOptions = {
+    documentSelector: [
+      {
+        language: 'jsonc'
+      }
+    ]
+  };
+
+  client = new LanguageClient(
+    '@donaldpipowitch/vscode-extension-client',
+    'VS Code Extension Client',
+    serverOptions,
+    clientOptions
+  );
+
+  // Starting the client will also launch the server.
+  client.start();
+}
+
+export function deactivate() {
+  if (client) {
+    return client.stop();
+  }
+}
+```
+
+From a high-level perspective our extension exports an `activate` and a `deactivate` function which will be called by VS Code. Both share a `client` variable which is an instance of `LanguageClient`. The `client` will be created and started by `activate` and will be stopped by `deactivate`.
+
+The interesting part is the `client` itself and how it is configured inside `activate`. A `LanguageClient` instance takes an `id` (in this case `'@donaldpipowitch/vscode-extension-client'`) and a `name` (in this case `'VS Code Extension Client'`) for logging purposes and two kinds of configurations: `serverOptions` and `clientOptions`.
+
+The `serverOptions` itself comes in two flavors as well. We have the default `run` options and `debug` options. In both cases we specify our (language server) `module` in the form of a resolved path to `'@donaldpipowitch/vscode-extension-server'`. In the `debug` case we also set the port which can be used for the [debugging inspection](https://nodejs.org/en/docs/guides/debugging-getting-started/).
+
+The `clientOptions` are a little bit more interesting. With the `documentSelector` we say _when_ our client should _use_ the language server. In this case everytime when a JSONC file is used.
+
+Let's recap:
+
+1. The `activationEvents` from our `package.json` tell VS Code _when_ to load our extension.
+2. The `clientOptions.documentSelector` tell our client _when_ to use the server (e.g. for code completion).
+3. The language server then checks (e.g. on code completion), if the file is actually a `.vscode/extensions.json`.
+
+Interestingly the `clientOptions.documentSelector` also offers a `patterns` setting which I set to `'**/.vscode/extensions.json'`. I thought it would only use our language server, if such a file is used, but the language server wasn't asked for any code completion instead. I'm not sure why, so I choose `language: 'jsonc'` which seems to work fine in general, because the language server filters out other files.
+
+Let's skip the unit test this time, because our package only contains a little bit configuration. (Sorry!)
+
+We have everything in place now to actually test our extension! 🎉
+
+I created a [`.vscode/launch.json`](.vscode/launch.json) which allows you to launch our extension in a new windows and which adds a debugger to our language server. All you have to do, is to switch into the debugging panel, choose _"Client + Server"_ and click on the _green arrow_ to start debugging. (If you want to learn more about `.vscode/launch.json` files you can [have a look at this documentation](https://code.visualstudio.com/docs/editor/tasks).)
+
+![the debug panel in VS Code](assets/debug-panel.png)
+
+If you see a new window with _"Extension Development Host"_ in the title bar and _"VS Code Extension Client"_ in the output tab with a _"Debugger attached."_ message, everything should be fine! ❤️ You should now be able to create a `.vscode/extensions.json` file and try to get some code completion. In this case I've written `"prettier"` and I see several code completions for this search term from the Marketplace API.
+
+![a code completion example which shows our extension in debugging mode](assets/debugging-example.png)
+
+Awesome. We're ready to ship our extension now.
+
+## Our first release
+
 **TODO**
 
-("postinstall": "vscode-install" is needed by vscode-languageclient.)
+- READMEs
+- CHANGELOG
+- npmignores/vscodeignores?
+- Licences?
+- npm and vscode registration
+- publish commands
 
 ---
 
 Thank you for reading this article. ♥
 
 I highly appreciate pull requests for grammar and spelling fixes as I'm not a native speaker as well as pull requests to make the code simpler and more idiomatic. Thank you!
-
----
-
-# My own TODOs and notes
-
-Note: Our `client` package needs to run `"postinstall": "vscode-install"` to generate the correct `vscode` typings needed at build time. If you get `''vscode'' has no exported member 'X'.` errors in some of your libs (like `vscode-languageclient`) these libs and your package probably require a different VS Code version. In our case we defined `"vscode": "^1.25.0"` in the `"engines"` section of `packages/client/package.json` which is the same used by `vscode-languageclient` at the time I'm writing this.
-
-- `"publisher": "vscode",` important
-- TODO: `launch.json`, debug test
-- `"window.openFoldersInNewWindow": "off",`; `--reuse-window` doesn't work
