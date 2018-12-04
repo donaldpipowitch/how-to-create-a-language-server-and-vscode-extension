@@ -35,13 +35,13 @@ In this article you will learn how you can create a language server and a VS Cod
 
 There are already existing tutorials which cover this topic. The best tutorial probably was created by the Microsoft team itself which is responsible for VS Code and the [language server protocol](https://microsoft.github.io/language-server-protocol/) which powers all language servers. You can find [Microsofts tutorial here](https://code.visualstudio.com/docs/extensions/example-language-server). Nevertheless I write my own tutorial for two reasons. First I write this tutorial for myself, so I can learn the concepts and the APIs in my own pace. Second I write it for _you_, because sometimes it helps to get a _similar_ tutorial for the same topic from a different perspective. For example my tooling, my project structure and my writing style will be slightly different. And sometimes this already helps learning something new!
 
-The language server we'll create and the corresponding VS Code extension will some nice functionality to `.vscode/extensions.json` files. If you don't know them, no worries. I'll explain them in the next section.
+The language server we'll create and the corresponding VS Code extension will add some nice functionality to `.vscode/extensions.json` files. If you don't know them, no worries. I'll explain them in the next section.
 
 I expect you to have some intermediate knowledge in Node development. This project will be written in [TypeScript](https://www.typescriptlang.org), we use [Jest](https://jestjs.io/) for testing and [yarn](https://yarnpkg.com/) as our package manager.
 
 ## Goal of this language server
 
-The `.vscode/extensions.json` files in the root of a project are VS Code specific configuration files. They can contain recommendations for extensions which should be used in this projects as well as recommendations of extensions which should _not_ be used. If a user of VS Code opens the project the editor asks the user if he/she wants to install missing recommended extensions or to disable unwanted, but already installed extensions.
+`.vscode/extensions.json` files in the root of a project are VS Code specific configuration files. They can contain recommendations for extensions which should be used in this projects as well as recommendations of extensions which should _not_ be used. If a user of VS Code opens the project the editor asks the user if he/she wants to install missing recommended extensions or to disable unwanted, but already installed extensions.
 
 Out of the box VS Code already offers code completion and validation for the interface (`{ recommendations: string[], unwantedRecommendations: string[] }`) of these files. The code completion for `recommendations[]`/`unwantedRecommendations[]` even shows you currently installed extensions. What is _missing_?
 
