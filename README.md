@@ -10,11 +10,11 @@ This `README.md` is written as a tutorial in which I'll explain how the `@donald
 
 If you're just interested in _using_ the `@donaldpipowitch/vscode-extension-*` packages, you'll find the usage information in their corresponding `README.md`'s.
 
-| Package                                                                 | Description                                                           |
-| ----------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| [`@donaldpipowitch/vscode-extension-core`](packages/core/README.md)     | Exports some useful APIs to get information about VS Code extensions. |
-| [`@donaldpipowitch/vscode-extension-server`](packages/server/README.md) | A `.vscode/extensions.json` language server.                          |
-| [`@donaldpipowitch/vscode-extension-client`](packages/client/README.md) | A client for the `.vscode/extensions.json` language server.           |
+| Package                                                                 | Description                                                                                    |
+| ----------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| [`@donaldpipowitch/vscode-extension-core`](packages/core/README.md)     | Exports some useful APIs to get information about VS Code extensions.                          |
+| [`@donaldpipowitch/vscode-extension-server`](packages/server/README.md) | A `.vscode/extensions.json` language server.                                                   |
+| [`@donaldpipowitch/vscode-extension-client`](packages/client/README.md) | A client for the `.vscode/extensions.json` language server. The client is a VS Code extension. |
 
 # Table of contents
 
@@ -29,17 +29,19 @@ If you're just interested in _using_ the `@donaldpipowitch/vscode-extension-*` p
 
 ## Background
 
-In this article you will learn how you can create a language server and a VS Code extension which uses this language server. A language server adds features like _autocomplete_, _go to definition_ or _documentation on hover_ to a programming language, to domain specific languages, but also to frameworks and configuration files, if it can't be covered by the language alone.
+In this article you will learn how you can create a language server and a VS Code extension which uses this language server. A language server adds features like _autocomplete_, _go to definition_ or _documentation on hover_ to a programming language, to domain specific languages, but also to frameworks and configuration files, if it can't be covered by the underlying language alone.
 
 [VS Code](https://code.visualstudio.com/) is a nice and extensible open source editor. We'll create an extension for VS Code which will use our custom language server. While language servers are editor agnostic we'll create a language server for a VS Code specific feature. So in this case it only makes sense to use it in the context of VS Code.
 
-There are already existing tutorials which cover this topic. The best tutorial probably was created by the MicroSoft team itself which is responsible for VS Code and the [language server protocol](https://microsoft.github.io/language-server-protocol/) which powers all language server. You can find [MicroSofts tutorial here](https://code.visualstudio.com/docs/extensions/example-language-server). Nevertheless I write my own tutorial for two reasons. First I write this tutorial for myself, so I can learn the concepts and the APIs in my own pace. Second I write it for _you_, because sometimes it helps to get a _similar_ tutorial for the same topic from a different perspective. For example my tooling, my project structure and my writing style will be slightly different. And sometimes this already helps learning something new!
+There are already existing tutorials which cover this topic. The best tutorial probably was created by the Microsoft team itself which is responsible for VS Code and the [language server protocol](https://microsoft.github.io/language-server-protocol/) which powers all language servers. You can find [Microsofts tutorial here](https://code.visualstudio.com/docs/extensions/example-language-server). Nevertheless I write my own tutorial for two reasons. First I write this tutorial for myself, so I can learn the concepts and the APIs in my own pace. Second I write it for _you_, because sometimes it helps to get a _similar_ tutorial for the same topic from a different perspective. For example my tooling, my project structure and my writing style will be slightly different. And sometimes this already helps learning something new!
 
-What we'll do is creating a language server and the corresponding VS Code extension which uses this server to add more functionality to `.vscode/extensions.json` files. I expect you to have some intermediate JavaScript knowledge. This project will be written in [TypeScript](https://www.typescriptlang.org), we use [Jest](https://jestjs.io/) for testing and [yarn](https://yarnpkg.com/) as our package manager.
+The language server we'll create and the corresponding VS Code extension will some nice functionality to `.vscode/extensions.json` files. If you don't know them, no worries. I'll explain them in the next section.
+
+I expect you to have some intermediate knowledge in Node development. This project will be written in [TypeScript](https://www.typescriptlang.org), we use [Jest](https://jestjs.io/) for testing and [yarn](https://yarnpkg.com/) as our package manager.
 
 ## Goal of this language server
 
-The `.vscode/extensions.json` files in the root of project can contain recommendations for extensions as well as unwanted recommendations for this specific project. If a user of VS Code opens the project the editor asks the user if he/she wants to install missing recommended extensions or to disable unwanted, but already installed extensions.
+The `.vscode/extensions.json` files in the root of a project are VS Code specific configuration files. They can contain recommendations for extensions which should be used in this projects as well as recommendations of extensions which should _not_ be used. If a user of VS Code opens the project the editor asks the user if he/she wants to install missing recommended extensions or to disable unwanted, but already installed extensions.
 
 Out of the box VS Code already offers code completion and validation for the interface (`{ recommendations: string[], unwantedRecommendations: string[] }`) of these files. The code completion for `recommendations[]`/`unwantedRecommendations[]` even shows you currently installed extensions. What is _missing_?
 
@@ -54,7 +56,7 @@ We try to add these three features in this tutorial.
 The project was tested and developed with following technologies:
 
 - [VS Code](https://code.visualstudio.com/) (I used `1.30.0-insider`)
-- [Node](https://nodejs.org/en/) (I used `8.14.0`, because _AFAIK_ VS Code currently bundles `node@8`)
+- [Node](https://nodejs.org/en/) (I used `8.14.0`, because VS Code currently bundles `node@8` _AFAIK_)
 - [yarn](https://yarnpkg.com/en/docs/install) (I used `1.12.3`)
 - [Git](https://git-scm.com/) (I used `2.18.0`)
 
