@@ -1,6 +1,6 @@
 ⚠️ WORK IN PROGRESS ⚠️
 
-# `@donaldpipowitch/vscode-extension-*` project
+# How to create a language server and VS Code extension
 
 [![Build Status](https://travis-ci.org/donaldpipowitch/how-to-create-a-language-server-and-vscode-extension.svg?branch=master)](https://travis-ci.org/donaldpipowitch/how-to-create-a-language-server-and-vscode-extension)
 
@@ -604,12 +604,16 @@ Awesome. We're ready to ship our extension now.
 
 ## Our first release
 
+Before we'll publish the packages I check different things like:
+
+- every package should have `README.md`
+- every package should have `CHANGELOG.md`
+- every `package.json` should have a `license` field and the so on
+
+We'll aslo add a `.vscodeignore` to our `client` package and an `.npmignore` file to the other packages, so we only publish files we need at runtime. (Instead of an `.npmignore` file we can also use the `files` field inside a `package.json` for npm, but [it looks like VS Code doesn't support this](https://github.com/Microsoft/vscode-vsce/issues/12). To be consistent we'll just use the _ignore files_ in all cases.) Note that some directories like `node_modules/` are _never_ included and some files like the `package.json` are _always_ included. At least for npm you can check what will be published by calling `$ npm publish --dry-run`. As far as I know there is no equivalent to do the same for VS Code extensions.
+
 **TODO**
 
-- READMEs
-- CHANGELOG
-- npmignores/vscodeignores?
-- Licences?
 - npm and vscode registration
 - publish commands
 

@@ -1,0 +1,6 @@
+# by default, ignore everything
+*
+*/**
+
+# allow these files to be published
+!dist/**
