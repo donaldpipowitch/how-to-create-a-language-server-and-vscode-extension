@@ -2,7 +2,7 @@
 
 > Exports some useful APIs to get information about VS Code extensions.
 
-⚠️ This package uses a non-public _Visual Studio MarketPlace APIs_ which could break at any time. ⚠️
+⚠️ This package uses non-public _Visual Studio MarketPlace APIs_ which could break at any time. ⚠️
 
 💡 This package was created as a part of the [_"How to create a language server and VS Code extension"_ article](https://github.com/donaldpipowitch/how-to-create-a-language-server-and-vscode-extension). Don't expect a fully featured and supported package, but feel free to use it, if you find it useful. 💡
 
