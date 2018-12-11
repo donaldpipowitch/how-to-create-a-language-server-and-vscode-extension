@@ -612,10 +612,12 @@ Before we'll publish the packages I check different things like:
 
 We'll aslo add a `.vscodeignore` to our `client` package and an `.npmignore` file to the other packages, so we only publish files we need at runtime. (Instead of an `.npmignore` file we can also use the `files` field inside a `package.json` for npm, but [it looks like VS Code doesn't support this](https://github.com/Microsoft/vscode-vsce/issues/12). To be consistent we'll just use the _ignore files_ in all cases.) Note that some directories like `node_modules/` are _never_ included and some files like the `package.json` are _always_ included. At least for npm you can check what will be published by calling `$ npm publish --dry-run`. As far as I know there is no equivalent to do the same for VS Code extensions.
 
+I have previously written in-depth about publishing packages to npm in [a different tutorial](https://github.com/Mercateo/rust-for-node-developers/blob/master/package-manager/README.md#publishing). If you never published a package before, you'll find all the information you need there. In general you have to register add [npmjs.com](https://www.npmjs.com/signup), login with your credentials by running `$ npm login` in your terminal and than run `$ npm publish --access public` inside the [`core`](packages/core) and [`server`](packages/server) packages. This is what I did for the initial `1.0.0` version. The `--access public` is needed, because we used a [_scoped package_](https://docs.npmjs.com/misc/scope) (- it is scoped, because I used `@donaldpipowitch` in the package name).
+
 **TODO**
 
-- npm and vscode registration
-- publish commands
+- vscode registration
+- publish with vscode
 
 ---
 
