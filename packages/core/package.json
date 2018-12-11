@@ -11,6 +11,7 @@
     "url": "https://github.com/donaldpipowitch/how-to-create-a-language-server-and-vscode-extension"
   },
   "scripts": {
+    "prepublish": "yarn build",
     "build": "tsc -b src",
     "watch": "tsc -b src -w",
     "unit": "jest -c tests/jest.config.js"
