@@ -29,7 +29,7 @@ export function activate() {
   };
 
   client = new LanguageClient(
-    '@donaldpipowitch/vscode-extension-client',
+    'vscode-extensions-files',
     'VS Code Extension Client',
     serverOptions,
     clientOptions

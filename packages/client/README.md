@@ -1,4 +1,4 @@
-# `@donaldpipowitch/vscode-extension-client`
+# `vscode-extensions-files`
 
 > A client for the `.vscode/extensions.json` language server.
 
@@ -11,7 +11,7 @@ This extension adds features like code completion to your `.vscode/extensions.js
 Open your [command palette in VS Code](https://code.visualstudio.com/docs/getstarted/userinterface#_command-palette) and run this:
 
 ```bash
-ext install @donaldpipowitch/vscode-extension-client
+ext install vscode-extensions-files
 ```
 
 Alternativly you can open your [extensions view in VS Code](https://code.visualstudio.com/docs/editor/extension-gallery) and install it that way.

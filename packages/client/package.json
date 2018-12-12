@@ -1,5 +1,5 @@
 {
-  "name": "@donaldpipowitch/vscode-extension-client",
+  "name": "vscode-extensions-files",
   "description": "A client for the .vscode/extensions.json language server.",
   "author": "Donald Pipowitch",
   "license": "MIT",

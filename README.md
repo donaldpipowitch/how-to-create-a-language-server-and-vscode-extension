@@ -14,7 +14,9 @@ If you're just interested in _using_ the `@donaldpipowitch/vscode-extension-*` p
 | ----------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
 | [`@donaldpipowitch/vscode-extension-core`](packages/core/README.md)     | Exports some useful APIs to get information about VS Code extensions.                          |
 | [`@donaldpipowitch/vscode-extension-server`](packages/server/README.md) | A `.vscode/extensions.json` language server.                                                   |
-| [`@donaldpipowitch/vscode-extension-client`](packages/client/README.md) | A client for the `.vscode/extensions.json` language server. The client is a VS Code extension. |
+| [`vscode-extensions-files`](packages/client/README.md)                  | A client for the `.vscode/extensions.json` language server. The client is a VS Code extension. |
+
+💡 In case you are wondering about the package name for the VS Code extension: VS Code extensions aren't published to npm, but to the _Visual Studio Code Marketplace_. They slightly differ from your usual package (and don't allow [_scoped package names_](https://docs.npmjs.com/misc/scope) for example). Luckily you'll learn more about that
 
 # Table of contents
 
@@ -24,7 +26,7 @@ If you're just interested in _using_ the `@donaldpipowitch/vscode-extension-*` p
 4. [Basic project structure](#basic-project-structure)
 5. [Creating `@donaldpipowitch/vscode-extension-core` and add search](#creating-donaldpipowitchvscode-extension-core-and-add-search)
 6. [Creating `@donaldpipowitch/vscode-extension-server` and add code completion](#creating-donaldpipowitchvscode-extension-server-and-add-code-completion)
-7. [Creating `@donaldpipowitch/vscode-extension-client` and test everything](#creating-donaldpipowitchvscode-extension-client-and-test-everything)
+7. [Creating `vscode-extensions-files` and test everything](#creating-vscode-extensions-files-and-test-everything)
 8. [Our first release](#our-first-release)
 
 ## Background
@@ -87,7 +89,7 @@ Our configurations and meta files out of the way we'll have a look into the [`pa
 
 - [`packages/core`](packages/core): This directory contains `@donaldpipowitch/vscode-extension-core`.
 - [`packages/server`](packages/server): Here we can find `@donaldpipowitch/vscode-extension-server`.
-- [`packages/client`](packages/client): Last, but not least - `@donaldpipowitch/vscode-extension-client`.
+- [`packages/client`](packages/client): Last, but not least - `vscode-extensions-files`.
 
 Maybe you are wondering why we have a `core` package and not just the server and the client (which is our extension)? Many frameworks and tools add language server on top of their original functionality. Think of ESLint (https://eslint.org/) which works standalone from the ESLint language server (https://github.com/Microsoft/vscode-eslint/blob/master/server). We do the same. This is useful so others can build on top of our logic - but without the need to load language server specific dependencies. This could be useful for small libs and CLIs. Besides that it makes it easier to show you which part of code is actually language server specific and which not.
 
@@ -488,7 +490,7 @@ test('should provide completion items (search "prettier")', async () => {
 
 For more examples you can have a look at the [test file](packages/server/tests/completion.ts) (- they all look quite similar).
 
-## Creating `@donaldpipowitch/vscode-extension-client` and test everything
+## Creating `vscode-extensions-files` and test everything
 
 The client package creates our VS Code extension and uses the language server. This package contains IDE-specific logic - in this case for VS Code.
 
@@ -555,7 +557,7 @@ export function activate() {
   };
 
   client = new LanguageClient(
-    '@donaldpipowitch/vscode-extension-client',
+    'vscode-extensions-files',
     'VS Code Extension Client',
     serverOptions,
     clientOptions
@@ -574,7 +576,7 @@ export function deactivate() {
 
 From a high-level perspective our extension exports an `activate` and a `deactivate` function which will be called by VS Code. Both share a `client` variable which is an instance of `LanguageClient`. The `client` will be created and started by `activate` and will be stopped by `deactivate`.
 
-The interesting part is the `client` itself and how it is configured inside `activate`. A `LanguageClient` instance takes an `id` (in this case `'@donaldpipowitch/vscode-extension-client'`) and a `name` (in this case `'VS Code Extension Client'`) for logging purposes and two kinds of configurations: `serverOptions` and `clientOptions`.
+The interesting part is the `client` itself and how it is configured inside `activate`. A `LanguageClient` instance takes an `id` (in this case `'vscode-extensions-files'`) and a `name` (in this case `'VS Code Extension Client'`) for logging purposes and two kinds of configurations: `serverOptions` and `clientOptions`.
 
 The `serverOptions` itself comes in two flavors as well. We have the default `run` options and `debug` options. In both cases we specify our (language server) `module` in the form of a resolved path to `'@donaldpipowitch/vscode-extension-server'`. In the `debug` case we also set the port which can be used for the [debugging inspection](https://nodejs.org/en/docs/guides/debugging-getting-started/).
 
