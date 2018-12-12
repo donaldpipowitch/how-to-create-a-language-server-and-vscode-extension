@@ -636,6 +636,7 @@ Successfully created publisher 'donaldpipowitch'.
 ```
 
 - if you already had a publisher and you aren't logged in as the publisher run `$ vsce login {your-publisher-name}`
+- `vscode:prepublish`: explain `npm install --no-package-lock`
 
 - vscode registration
 - publish with vscode
