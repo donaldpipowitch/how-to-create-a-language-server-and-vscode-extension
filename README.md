@@ -616,6 +616,25 @@ I have previously written in-depth about publishing packages to npm in [a differ
 
 **TODO**
 
+- create an Azure DevOps account on https://dev.azure.com, if you don't have one (or login with an existing Microsoft account)
+- create personal access token in the user settings security page (link should look like `https://dev.azure.com/{your-name}/_usersSettings/tokens`)
+- give it a name (like `vscode`), some Expiration date, and make sure to have the scopes _"Acquire"_ and _"Manage"_ for _"Marketplace"_ (add image)
+- copy token, so we can create a _publisher_ (skip this step, if you already have one)
+- in [VS Codes own words](https://code.visualstudio.com/docs/extensions/publish-extension#_create-a-publisher) a _"publisher is an identity who can publish extensions to the Visual Studio Code Marketplace"_.
+- `$ npm install -g vsce`
+- run `$ vsce create-publisher {your-publisher-name}`:
+
+```bash
+$ vsce create-publisher donaldpipowitch
+Publisher human-friendly name: (donaldpipowitch) Donald Pipowitch
+E-mail: pipo@senaeh.de
+Personal Access Token: ****************************************************
+
+Successfully created publisher 'donaldpipowitch'.
+```
+
+- if you already had a publisher and you aren't logged in as the publisher run `$ vsce login {your-publisher-name}`
+
 - vscode registration
 - publish with vscode
 
