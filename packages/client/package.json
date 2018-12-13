@@ -10,7 +10,7 @@
     "type": "git",
     "url": "https://github.com/donaldpipowitch/how-to-create-a-language-server-and-vscode-extension"
   },
-  "publisher": "vscode",
+  "publisher": "donaldpipowitch",
   "engines": {
     "vscode": "^1.25.0"
   },
