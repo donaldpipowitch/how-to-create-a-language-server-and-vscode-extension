@@ -637,8 +637,19 @@ Successfully created publisher 'donaldpipowitch'.
 
 - or visit https://marketplace.visualstudio.com/manage/publishers/donaldpipowitch to manage it
 - if you already had a publisher and you aren't logged in as the publisher run `$ vsce login {your-publisher-name}`
-- `vscode:prepublish`: explain `npm install --no-package-lock`
+- token also needed for publishing
+- `vscode:prepublish`: explain `npm install --no-package-lock`, no `vscode:postpublish` to run `yarn` and clean up
 - `"publisher"` field in `package.json`
+- https://marketplace.visualstudio.com/items?itemName=donaldpipowitch.vscode-extensions-files
+- .vsix files are .zip files
+- dev deps are excluded automatically
+
+- explain:
+
+```
+$ npm -v
+6.4.1
+```
 
 - vscode registration
 - publish with vscode

@@ -2,5 +2,15 @@
 *
 */**
 
+# .npmignore will _always_ include those files,
+# but we need to list them explicitly for .vscodeignore
+!README.md
+!CHANGELOG.md
+!LICENSE
+
+# .npmignore will _never_ include node_modules/,
+# but VS Code extensions _need_ them
+!node_modules/**
+
 # allow these files to be published
 !dist/**
