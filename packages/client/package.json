@@ -19,7 +19,7 @@
   ],
   "scripts": {
     "postinstall": "vscode-install",
-    "vscode:prepublish": "npm install --no-package-lock && yarn build",
+    "vscode:prepublish": "npm install --no-package-lock --production && yarn build",
     "build": "tsc -b src",
     "watch": "tsc -b src -w"
   },

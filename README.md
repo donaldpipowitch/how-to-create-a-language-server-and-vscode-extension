@@ -16,7 +16,9 @@ If you're just interested in _using_ the `@donaldpipowitch/vscode-extension-*` p
 | [`@donaldpipowitch/vscode-extension-server`](packages/server/README.md) | A `.vscode/extensions.json` language server.                                                   |
 | [`vscode-extensions-files`](packages/client/README.md)                  | A client for the `.vscode/extensions.json` language server. The client is a VS Code extension. |
 
-💡 In case you are wondering about the package name for the VS Code extension: VS Code extensions aren't published to npm, but to the _Visual Studio Code Marketplace_. They slightly differ from your usual package (and don't allow [_scoped package names_](https://docs.npmjs.com/misc/scope) for example). Luckily you'll learn more about that
+💡 In case you are wondering about the package name for the VS Code extension: VS Code extensions aren't published to npm, but to the _Visual Studio Code Marketplace_. They slightly differ from your usual package (and don't allow [_scoped package names_](https://docs.npmjs.com/misc/scope) for example). Luckily you'll learn more about that in this tutorial.
+
+If you feel stuck with _my tutorial_, just open an issue or [write me on Twitter](https://twitter.com/PipoPeperoni). If you have general questions about authoring VS Code extension you can visit the [#vscode-extension-dev channel](https://vscode-dev-community.slack.com/messages/C74CB59NE) on slack, which helped me several times. It can also be useful to create an issue or pull request in some of the VS Code related repositories like [vscode-extension-samples](https://github.com/Microsoft/vscode-extension-samples), if your issue is related.
 
 # Table of contents
 
@@ -28,6 +30,7 @@ If you're just interested in _using_ the `@donaldpipowitch/vscode-extension-*` p
 6. [Creating `@donaldpipowitch/vscode-extension-server` and add code completion](#creating-donaldpipowitchvscode-extension-server-and-add-code-completion)
 7. [Creating `vscode-extensions-files` and test everything](#creating-vscode-extensions-files-and-test-everything)
 8. [Our first release](#our-first-release)
+9. [TODOs](#todos)
 
 ## Background
 
@@ -49,7 +52,7 @@ Out of the box VS Code already offers code completion and validation for the int
 
 - code completion for extensions which aren't installed locally
 - on hover documentation for an extension (**TODO**)
-- got to definitions for an extension (**TODO**)
+- go to definitions for an extension (**TODO**)
 
 We try to add these three features in this tutorial.
 
@@ -58,8 +61,9 @@ We try to add these three features in this tutorial.
 The project was tested and developed with following technologies:
 
 - [VS Code](https://code.visualstudio.com/) (I used `1.30.0-insider`)
-- [Node](https://nodejs.org/en/) (I used `8.14.0`, because VS Code currently bundles `node@8` _AFAIK_)
+- [Node](https://nodejs.org/en/) (I used `8.14.0` - VS Code Insiders _just_ switched to `node@10` on [Dec. 13, 2018](https://twitter.com/BenjaminPasero/status/1073123339869265920))
 - [yarn](https://yarnpkg.com/en/docs/install) (I used `1.12.3`)
+- [npm](https://www.npmjs.com/) (I used `6.4.1` - it is explained in the article, why I use yarn _and_ npm)
 - [Git](https://git-scm.com/) (I used `2.18.0`)
 
 If you have these requirements installed, you can setup the project with the following steps:
@@ -499,13 +503,14 @@ Let's begin with the [`package.json`](packages/client/package.json) this time, w
 ```json
 {
   // ...
-  "publisher": "vscode",
+  "publisher": "donaldpipowitch",
   "engines": {
     "vscode": "^1.25.0"
   },
   "activationEvents": ["workspaceContains:**/.vscode/extensions.json"],
   "scripts": {
-    "postinstall": "vscode-install"
+    "postinstall": "vscode-install",
+    "vscode:prepublish": "..."
     // ...
   },
   "dependencies": {
@@ -517,7 +522,7 @@ Let's begin with the [`package.json`](packages/client/package.json) this time, w
 }
 ```
 
-`publisher` is a required field which represents the person or organisation which publishes this extension. I'll show you later how you create a _publisher_. `engines.vscode` is also required and specifies which VS Code versions your extension supports.
+`publisher` is a required field which represents the person or organisation which publishes this extension. I'll show you later how you create a _publisher_ and I'll also explain `scripts['vscode:prepublish']` in [the publishing section](#our-first-release). `engines.vscode` is also required and specifies which VS Code versions your extension supports.
 
 `activationEvents` is not required. You use [activation events](https://code.visualstudio.com/docs/extensionAPI/activation-events) to tell VS Code _when_ your extension needs to be loaded, so your extension isn't loaded automatically in every project and slows you down, even if you don't need it. In this case I said that the extension should be loaded, if a `.vscode/extensions.json` file can be found in the workspace.
 
@@ -612,21 +617,18 @@ Before we'll publish the packages I check different things like:
 - every package should have `CHANGELOG.md`
 - every `package.json` should have a `license` field and the so on
 
-We'll aslo add a `.vscodeignore` to our `client` package and an `.npmignore` file to the other packages, so we only publish files we need at runtime. (Instead of an `.npmignore` file we can also use the `files` field inside a `package.json` for npm, but [it looks like VS Code doesn't support this](https://github.com/Microsoft/vscode-vsce/issues/12). To be consistent we'll just use the _ignore files_ in all cases.) Note that some directories like `node_modules/` are _never_ included and some files like the `package.json` are _always_ included. At least for npm you can check what will be published by calling `$ npm publish --dry-run`. As far as I know there is no equivalent to do the same for VS Code extensions.
+We'll also add a `.vscodeignore` to our `client` package and an `.npmignore` file to the other packages, so we only publish files we need at runtime. (Instead of an `.npmignore` file we can also use the `files` field inside a `package.json` for npm, but [it looks like VS Code doesn't support this](https://github.com/Microsoft/vscode-vsce/issues/12). To be consistent we'll just use the _ignore files_ in both cases.) Note that some directories like `node_modules/` are _never_ included and some files like the `package.json` are _always_ included. At least for npm you can check what will be published by calling `$ npm publish --dry-run`. As far as I know there is no equivalent to do the same for VS Code extensions, but a different way to inspect your extension, before it will be published. I describe it below, because we need to install another tool to do that.
 
 I have previously written in-depth about publishing packages to npm in [a different tutorial](https://github.com/Mercateo/rust-for-node-developers/blob/master/package-manager/README.md#publishing). If you never published a package before, you'll find all the information you need there. In general you have to register add [npmjs.com](https://www.npmjs.com/signup), login with your credentials by running `$ npm login` in your terminal and than run `$ npm publish --access public` inside the [`core`](packages/core) and [`server`](packages/server) packages. This is what I did for the initial `1.0.0` version. The `--access public` is needed, because we used a [_scoped package_](https://docs.npmjs.com/misc/scope) (- it is scoped, because I used `@donaldpipowitch` in the package name).
 
-**TODO**
+To publish an extension to the _"Visual Studio Code Marketplace"_ you'll need an [Azure DevOps account](https://dev.azure.com). (You can also use an existing Microsoft account.) Once your able to visit Azure DevOps, click on your avatar in the upper right corner and click on _"security"_ in the menu (or visit `https://dev.azure.com/{your-name}/_usersSettings/tokens` and change `{your-name}` to... your account name). You should create a personal access token now. Make sure to give it a name (like `vscode` or `vscode-extensions` or something like that), some expiration date and select the scopes _"Acquire"_ and _"Manage"_ for _"Marketplace"_:
 
-- create an Azure DevOps account on https://dev.azure.com, if you don't have one (or login with an existing Microsoft account)
-- create personal access token in the user settings security page (link should look like `https://dev.azure.com/{your-name}/_usersSettings/tokens`)
-- give it a name (like `vscode`), some Expiration date, and make sure to have the scopes _"Acquire"_ and _"Manage"_ for _"Marketplace"_ (add image)
-- copy token, so we can create a _publisher_ (skip this step, if you already have one)
-- in [VS Codes own words](https://code.visualstudio.com/docs/extensions/publish-extension#_create-a-publisher) a _"publisher is an identity who can publish extensions to the Visual Studio Code Marketplace"_.
-- `$ npm install -g vsce`
-- run `$ vsce create-publisher {your-publisher-name}`:
+![the correct scopes for your personal access token](assets/marketplace-scope.png)
+
+Copy the token to a safe place! We need it multiple times. Next we'll create a _publisher_. In [VS Codes own words](https://code.visualstudio.com/docs/extensions/publish-extension#_create-a-publisher) a _"publisher is an identity who can publish extensions to the Visual Studio Code Marketplace"_. Remember that we already specified a publisher in our [`client/package.json`](packages/client/package.json). Make sure that the publisher you'll now create is the same as you specified in your `client/package.json` or you'll get really weird error messages (`Access Denied: {my-name} needs the following permission(s) on the resource /{my-publisher} to perform this action: View user permissions on a resource`). To create a publisher we'll need the _Visual Studio Code Extension Manager_ or short [`vsce`](https://www.npmjs.com/package/vsce). I used `donaldpipowitch` as my publisher name:
 
 ```bash
+$ npm install -g vsce
 $ vsce create-publisher donaldpipowitch
 Publisher human-friendly name: (donaldpipowitch) Donald Pipowitch
 E-mail: pipo@senaeh.de
@@ -635,24 +637,53 @@ Personal Access Token: ****************************************************
 Successfully created publisher 'donaldpipowitch'.
 ```
 
-- or visit https://marketplace.visualstudio.com/manage/publishers/donaldpipowitch to manage it
-- if you already had a publisher and you aren't logged in as the publisher run `$ vsce login {your-publisher-name}`
-- token also needed for publishing
-- `vscode:prepublish`: explain `npm install --no-package-lock`, no `vscode:postpublish` to run `yarn` and clean up
-- `"publisher"` field in `package.json`
-- https://marketplace.visualstudio.com/items?itemName=donaldpipowitch.vscode-extensions-files
-- .vsix files are .zip files
-- dev deps are excluded automatically
+You can also visit the [Marketplace administration](https://marketplace.visualstudio.com/manage/publishers/donaldpipowitch) to create and manage publishers.
 
-- explain:
+Now we're ready to publish our extension. While our npm-published extensions used a `prepublish` hook in the `scripts` section of our `package.json` to build our package before publishing, we'll now need a `vscode:prepublish` hook. But it will not just build our package, it'll also install our dependencies with npm. That sounds confusing! In contrast to an npm-published package we'll publish our VS Code extension _with_ dependencies. But because I used yarn to manage this project our runtime dependencies are hoisted to the root of the project. By using npm we can install your dependencies in the extension folder just before publishing.
 
-```
-$ npm -v
-6.4.1
+```json
+{
+  // ...
+  "scripts": {
+    "vscode:prepublish": "npm install --no-package-lock --production && yarn build"
+    // ...
+  }
+}
 ```
 
-- vscode registration
-- publish with vscode
+Two additional notes:
+
+- `vsce` filters out dev dependencies, before publishing the extension. So we don't _need_ the `--production` flag, but it makes the installation a little bit faster.
+- There is no `vscode:postpublish` hook. I would _love_ to use `"vscode:postpublish": "yarn"` to get in a clean state again.
+
+Why did I used yarn in the first place? I basically use the yarn workspace feature in all of my projects. I found it to be _really_ useful to avoid strange bugs appearing, because a package was used multiple times, to developed multiple dependent packages localy and to share the _exact_ same build tools across multiple packages.
+
+I previously said there is no equivalent to `$ npm publish --dry-run`, but you can still inspect your extension before it is published that way, by running this command in our [`client`](packages/client) folder:
+
+```bash
+$ vsce package
+```
+
+This will create a `.vsix` file. You can rename it to a `.zip` file and unzip it. Now your able to see _what_ gets published. Make sure all the files you need are included.
+
+Now we can publish our package:
+
+```bash
+$ vsce publish
+```
+
+Wow! 🎉 Take a small break. You really accomplished something great.
+
+Within seconds you should be able to see your extension in the marketplace. Here is [mine](https://marketplace.visualstudio.com/items?itemName=donaldpipowitch.vscode-extensions-files).
+
+## TODOs
+
+There are two additional chapters left I want to write:
+
+- I want to show a small description of the extension _on hover_
+- I want to add a _go to definitions_ feature which brings you to the marketplace page of that extension _on click_.
+
+Feel free to watch this repository. 🙌
 
 ---
 
