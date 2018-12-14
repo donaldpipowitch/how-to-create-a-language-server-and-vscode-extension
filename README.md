@@ -1,5 +1,3 @@
-⚠️ WORK IN PROGRESS ⚠️
-
 # How to create a language server and VS Code extension
 
 [![Build Status](https://travis-ci.org/donaldpipowitch/how-to-create-a-language-server-and-vscode-extension.svg?branch=master)](https://travis-ci.org/donaldpipowitch/how-to-create-a-language-server-and-vscode-extension)
