@@ -295,7 +295,7 @@ As I said earlier we create a `connection` (our actually server) and an instance
 
 After that we pass `connection` to our `documents` (with `documents.listen(connection)`) and tell the `connection` to listen for any requests from any client. At the end both are exported, so we can use them inside [`src/index.ts`](packages/server/src/index.ts) as we saw earlier.
 
-Now let's have a look at [`src/completion.ts`](packages/server/src/completion.ts) and we do it in _two parts_. First well have a look at tge exported `configureCompletion` function which was already used inside [`src/index.ts`](packages/server/src/index.ts):
+Now let's have a look at [`src/completion.ts`](packages/server/src/completion.ts) and we do it in _two parts_. First well have a look at the exported `configureCompletion` function which was already used inside [`src/index.ts`](packages/server/src/index.ts):
 
 ```ts
 import { search, Canceler } from '@donaldpipowitch/vscode-extension-core';
@@ -326,7 +326,14 @@ export function configureCompletion(
   //     "triggerKind": 1
   //   }
   // }
-  connection.onCompletion(async ({ position, textDocument }) => {
+  connection.onCompletion(async ({ position, textDocument }, token) => {
+    token.onCancellationRequested(() => {
+      if (lastCancel) {
+        lastCancel();
+        lastCancel = null;
+      }
+    });
+
     if (lastCancel) {
       lastCancel();
       lastCancel = null;
@@ -379,7 +386,7 @@ export function configureCompletion(
 
 That is a lot to cover! Let's try to break it down a little bit.
 
-`configureCompletion` has just one purpose: set a `onCompletion` handler on our `connection`. A client can basically ask at any time for any file on any position for possible _completion items_ (e.g. suggestion about what could be completed). Because it can happen at any time and because I search can take an unknown time to resolve, we check if there is a pending search (`if (lastCancel) {}`) and if there is a pending search, we cancel it.
+`configureCompletion` has just one purpose: set a `onCompletion` handler on our `connection`. A client can basically ask at any time for any file on any position for possible _completion items_ (e.g. suggestion about what could be completed). Because it can happen at any time and because I search can take an unknown time to resolve, we check if there is a pending search (`if (lastCancel) {}`) and if there is a pending search, we cancel it. Some clients may even want to cancel an ongoing request for other reasons (e.g. because the user closes the editor) so we provide a `token.onCancellationRequested` handler which takes care of canceling the request.
 
 To handle the clients request correctly we get the `position` (e.g. the cursor position) and the `textDocument.uri` (basically the "file name"). With these two params we can check, if the client requests completion items for a `.vscode/extensions.json` file and the values of `recommendations[]` or `unwantedRecommendations[]`. If it is a different file we return early. If it _is_ a `.vscode/extensions.json` file we try to get its content - if it is not available we return as well. If we have the files content, we try to parse it (`const tree = parseTree(document.getText())`).
 
@@ -464,9 +471,12 @@ const setup = ({ text, offset }: { text: string; offset: number }) => {
 
   return {
     callCompletionHandler: () =>
-      completionHandler({
-        textDocument: { uri: '.vscode/extensions.json' }
-      }),
+      completionHandler(
+        {
+          textDocument: { uri: '.vscode/extensions.json' }
+        },
+        { onCancellationRequested: () => {} }
+      ),
     resolveSearch: () => resolve(prettier),
     cancelSearch: cancel
   };
@@ -513,8 +523,11 @@ Let's begin with the [`package.json`](packages/client/package.json) this time, w
   },
   "dependencies": {
     "@donaldpipowitch/vscode-extension-server": "^1.0.0",
-    "vscode": "^1.1.21",
     "vscode-languageclient": "^5.1.1"
+  },
+  "devDependencies": {
+    // ...
+    "vscode": "^1.1.21"
   }
   // ...
 }
@@ -524,7 +537,7 @@ Let's begin with the [`package.json`](packages/client/package.json) this time, w
 
 `activationEvents` is not required. You use [activation events](https://code.visualstudio.com/docs/extensionAPI/activation-events) to tell VS Code _when_ your extension needs to be loaded, so your extension isn't loaded automatically in every project and slows you down, even if you don't need it. In this case I said that the extension should be loaded, if a `.vscode/extensions.json` file can be found in the workspace.
 
-`scripts.postinstall` calls a script called `vscode-install` provided by the [`vscode`](https://github.com/Microsoft/vscode-extension-vscode) package, which is a part of our `dependencies`. We don't use this package directly in our client, but it is needed by our other dependency [`vscode-languageclient`](https://github.com/Microsoft/vscode-languageserver-node). `vscode` depends on _our_ `engines.vscode` setting and generates some files like type declarations when we call `vscode-install`.
+`scripts.postinstall` calls a script called `vscode-install` provided by the [`vscode`](https://github.com/Microsoft/vscode-extension-vscode) package, which is a part of our `devDependencies`. We don't use this package directly in our client, but it is needed by our other dependency [`vscode-languageclient`](https://github.com/Microsoft/vscode-languageserver-node). `vscode` depends on _our_ `engines.vscode` setting and generates some files like type declarations when we call `vscode-install`.
 
 Now we can dive into our [`src/index.ts`](packages/client/src/index.ts):
 
@@ -554,7 +567,8 @@ export function activate() {
   const clientOptions: LanguageClientOptions = {
     documentSelector: [
       {
-        language: 'jsonc'
+        pattern: '**/.vscode/extensions.json',
+        scheme: 'file'
       }
     ]
   };
@@ -583,21 +597,19 @@ The interesting part is the `client` itself and how it is configured inside `act
 
 The `serverOptions` itself comes in two flavors as well. We have the default `run` options and `debug` options. In both cases we specify our (language server) `module` in the form of a resolved path to `'@donaldpipowitch/vscode-extension-server'`. In the `debug` case we also set the port which can be used for the [debugging inspection](https://nodejs.org/en/docs/guides/debugging-getting-started/).
 
-The `clientOptions` are a little bit more interesting. With the `documentSelector` we say _when_ our client should _use_ the language server. In this case everytime when a JSONC file is used.
+The `clientOptions` are a little bit more interesting. With the `documentSelector` we say _when_ our client should _use_ the language server. In this case everytime a file matches the path `'**/.vscode/extensions.json'`.
 
 Let's recap:
 
 1. The `activationEvents` from our `package.json` tell VS Code _when_ to load our extension.
 2. The `clientOptions.documentSelector` tell our client _when_ to use the server (e.g. for code completion).
-3. The language server then checks (e.g. on code completion), if the file is actually a `.vscode/extensions.json`.
-
-Interestingly the `clientOptions.documentSelector` also offers a `patterns` setting which I set to `'**/.vscode/extensions.json'`. I thought it would only use our language server, if such a file is used, but the language server wasn't asked for any code completion instead. I'm not sure why, so I choose `language: 'jsonc'` which seems to work fine in general, because the language server filters out other files.
+3. The language server then checks (e.g. on code completion), if the file is actually a `.vscode/extensions.json`. (This looks a little bit redundant, but the server has no control over the client and the client _could_ ask for code completion in other files.)
 
 Let's skip the unit test this time, because our package only contains a little bit configuration. (Sorry!)
 
 We have everything in place now to actually test our extension! 🎉
 
-I created a [`.vscode/launch.json`](.vscode/launch.json) which allows you to launch our extension in a new windows and which adds a debugger to our language server. All you have to do, is to switch into the debugging panel, choose _"Client + Server"_ and click on the _green arrow_ to start debugging. (If you want to learn more about `.vscode/launch.json` files you can [have a look at this documentation](https://code.visualstudio.com/docs/editor/tasks).)
+I created a [`.vscode/launch.json`](.vscode/launch.json) which allows you to launch our extension in a new windows and which adds a debugger to our language server. All you have to do, is to switch into the debugging panel, choose _"Client + Server"_ and click on the _green arrow_ to start debugging. This will automatically open the [`example/`](example/) directory which you can use to debug the extension. (If you want to learn more about `.vscode/launch.json` files you can [have a look at this documentation](https://code.visualstudio.com/docs/editor/tasks).)
 
 ![the debug panel in VS Code](assets/debug-panel.png)
 
@@ -615,7 +627,7 @@ Before we'll publish the packages I check different things like:
 - every package should have `CHANGELOG.md`
 - every `package.json` should have a `license` field and the so on
 
-We'll also add a `.vscodeignore` to our `client` package and an `.npmignore` file to the other packages, so we only publish files we need at runtime. (Instead of an `.npmignore` file we can also use the `files` field inside a `package.json` for npm, but [it looks like VS Code doesn't support this](https://github.com/Microsoft/vscode-vsce/issues/12). To be consistent we'll just use the _ignore files_ in both cases.) Note that some directories like `node_modules/` are _never_ included and some files like the `package.json` are _always_ included. At least for npm you can check what will be published by calling `$ npm publish --dry-run`. As far as I know there is no equivalent to do the same for VS Code extensions, but a different way to inspect your extension, before it will be published. I describe it below, because we need to install another tool to do that.
+We'll also add a `.vscodeignore` to our `client` package and an `.npmignore` file to the other packages, so we only publish files we need at runtime. (Instead of an `.npmignore` file we can also use the `files` field inside a `package.json` for npm, but [it looks like VS Code doesn't support this](https://github.com/Microsoft/vscode-vsce/issues/12). To be consistent we'll just use the _ignore files_ in both cases.) Note that some directories like `node_modules/` are _never_ included and some files like the `package.json` are _always_ included. For npm you can check what will be published by calling `$ npm publish --dry-run`. VS Code offers the same functionality, but I describe it in a minute, because we need to install another tool to before we can do that.
 
 I have previously written in-depth about publishing packages to npm in [a different tutorial](https://github.com/Mercateo/rust-for-node-developers/blob/master/package-manager/README.md#publishing). If you never published a package before, you'll find all the information you need there. In general you have to register add [npmjs.com](https://www.npmjs.com/signup), login with your credentials by running `$ npm login` in your terminal and than run `$ npm publish --access public` inside the [`core`](packages/core) and [`server`](packages/server) packages. This is what I did for the initial `1.0.0` version. The `--access public` is needed, because we used a [_scoped package_](https://docs.npmjs.com/misc/scope) (- it is scoped, because I used `@donaldpipowitch` in the package name).
 
@@ -656,13 +668,9 @@ Two additional notes:
 
 Why did I used yarn in the first place? I basically use the yarn workspace feature in all of my projects. I found it to be _really_ useful to avoid strange bugs appearing, because a package was used multiple times, to developed multiple dependent packages localy and to share the _exact_ same build tools across multiple packages.
 
-I previously said there is no equivalent to `$ npm publish --dry-run`, but you can still inspect your extension before it is published that way, by running this command in our [`client`](packages/client) folder:
+I previously said there would be an equivalent to `$ npm publish --dry-run`, which is called `$ vsce ls`. This will list all the files which will be published with your extension. Make sure all the files you need are included.
 
-```bash
-$ vsce package
-```
-
-This will create a `.vsix` file. You can rename it to a `.zip` file and unzip it. Now your able to see _what_ gets published. Make sure all the files you need are included.
+**Please note**: If you follow this tutorial very _closely_ please don't run the next command so the Visual Studio MarketPlace isn't flooded by duplicated extensions. Thank you! ✌️
 
 Now we can publish our package:
 

@@ -1,0 +1,4 @@
+{
+  // you should be able to complete "prettier" to something like "esbenp.prettier-vscode" here
+  "recommendations": ["prettier"]
+}
