@@ -295,7 +295,7 @@ As I said earlier we create a `connection` (our actually server) and an instance
 
 After that we pass `connection` to our `documents` (with `documents.listen(connection)`) and tell the `connection` to listen for any requests from any client. At the end both are exported, so we can use them inside [`src/index.ts`](packages/server/src/index.ts) as we saw earlier.
 
-Now let's have a look at [`src/completion.ts`](packages/server/src/completion.ts) and we do it in _two parts_. First well have a look at tge exported `configureCompletion` function which was already used inside [`src/index.ts`](packages/server/src/index.ts):
+Now let's have a look at [`src/completion.ts`](packages/server/src/completion.ts) and we do it in _two parts_. First well have a look at the exported `configureCompletion` function which was already used inside [`src/index.ts`](packages/server/src/index.ts):
 
 ```ts
 import { search, Canceler } from '@donaldpipowitch/vscode-extension-core';
@@ -326,7 +326,14 @@ export function configureCompletion(
   //     "triggerKind": 1
   //   }
   // }
-  connection.onCompletion(async ({ position, textDocument }) => {
+  connection.onCompletion(async ({ position, textDocument }, token) => {
+    token.onCancellationRequested(() => {
+      if (lastCancel) {
+        lastCancel();
+        lastCancel = null;
+      }
+    });
+
     if (lastCancel) {
       lastCancel();
       lastCancel = null;
@@ -379,7 +386,7 @@ export function configureCompletion(
 
 That is a lot to cover! Let's try to break it down a little bit.
 
-`configureCompletion` has just one purpose: set a `onCompletion` handler on our `connection`. A client can basically ask at any time for any file on any position for possible _completion items_ (e.g. suggestion about what could be completed). Because it can happen at any time and because I search can take an unknown time to resolve, we check if there is a pending search (`if (lastCancel) {}`) and if there is a pending search, we cancel it.
+`configureCompletion` has just one purpose: set a `onCompletion` handler on our `connection`. A client can basically ask at any time for any file on any position for possible _completion items_ (e.g. suggestion about what could be completed). Because it can happen at any time and because I search can take an unknown time to resolve, we check if there is a pending search (`if (lastCancel) {}`) and if there is a pending search, we cancel it. Some clients may even want to cancel an ongoing request for other reasons (e.g. because the user closes the editor) so we provide a `token.onCancellationRequested` handler which takes care of canceling the request.
 
 To handle the clients request correctly we get the `position` (e.g. the cursor position) and the `textDocument.uri` (basically the "file name"). With these two params we can check, if the client requests completion items for a `.vscode/extensions.json` file and the values of `recommendations[]` or `unwantedRecommendations[]`. If it is a different file we return early. If it _is_ a `.vscode/extensions.json` file we try to get its content - if it is not available we return as well. If we have the files content, we try to parse it (`const tree = parseTree(document.getText())`).
 
@@ -464,9 +471,12 @@ const setup = ({ text, offset }: { text: string; offset: number }) => {
 
   return {
     callCompletionHandler: () =>
-      completionHandler({
-        textDocument: { uri: '.vscode/extensions.json' }
-      }),
+      completionHandler(
+        {
+          textDocument: { uri: '.vscode/extensions.json' }
+        },
+        { onCancellationRequested: () => {} }
+      ),
     resolveSearch: () => resolve(prettier),
     cancelSearch: cancel
   };

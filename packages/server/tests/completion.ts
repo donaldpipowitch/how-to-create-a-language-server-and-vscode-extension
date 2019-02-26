@@ -29,9 +29,12 @@ const setup = ({ text, offset }: { text: string; offset: number }) => {
 
   return {
     callCompletionHandler: () =>
-      completionHandler({
-        textDocument: { uri: '.vscode/extensions.json' }
-      }),
+      completionHandler(
+        {
+          textDocument: { uri: '.vscode/extensions.json' }
+        },
+        { onCancellationRequested: () => {} }
+      ),
     resolveSearch: () => resolve(prettier),
     cancelSearch: cancel
   };

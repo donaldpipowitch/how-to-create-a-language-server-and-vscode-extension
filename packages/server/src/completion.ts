@@ -26,7 +26,14 @@ export function configureCompletion(
   //     "triggerKind": 1
   //   }
   // }
-  connection.onCompletion(async ({ position, textDocument }) => {
+  connection.onCompletion(async ({ position, textDocument }, token) => {
+    token.onCancellationRequested(() => {
+      if (lastCancel) {
+        lastCancel();
+        lastCancel = null;
+      }
+    });
+
     if (lastCancel) {
       lastCancel();
       lastCancel = null;
