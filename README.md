@@ -670,6 +670,8 @@ Why did I used yarn in the first place? I basically use the yarn workspace featu
 
 I previously said there would be an equivalent to `$ npm publish --dry-run`, which is called `$ vsce ls`. This will list all the files which will be published with your extension. Make sure all the files you need are included.
 
+**Please note**: If you follow this tutorial very _closely_ please don't run the next command so the Visual Studio MarketPlace isn't flooded by duplicated extensions. Thank you! ✌️
+
 Now we can publish our package:
 
 ```bash
