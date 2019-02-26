@@ -8,7 +8,7 @@
       "runtimeExecutable": "${execPath}",
       "args": [
         "--extensionDevelopmentPath=${workspaceRoot}/packages/client",
-        "--reuse-window"
+        "${workspaceRoot}/example"
       ],
       "stopOnEntry": false,
       "sourceMaps": true,

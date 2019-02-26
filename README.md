@@ -610,7 +610,7 @@ Let's skip the unit test this time, because our package only contains a little b
 
 We have everything in place now to actually test our extension! 🎉
 
-I created a [`.vscode/launch.json`](.vscode/launch.json) which allows you to launch our extension in a new windows and which adds a debugger to our language server. All you have to do, is to switch into the debugging panel, choose _"Client + Server"_ and click on the _green arrow_ to start debugging. (If you want to learn more about `.vscode/launch.json` files you can [have a look at this documentation](https://code.visualstudio.com/docs/editor/tasks).)
+I created a [`.vscode/launch.json`](.vscode/launch.json) which allows you to launch our extension in a new windows and which adds a debugger to our language server. All you have to do, is to switch into the debugging panel, choose _"Client + Server"_ and click on the _green arrow_ to start debugging. This will automatically open the [`example/`](example/) directory which you can use to debug the extension. (If you want to learn more about `.vscode/launch.json` files you can [have a look at this documentation](https://code.visualstudio.com/docs/editor/tasks).)
 
 ![the debug panel in VS Code](assets/debug-panel.png)
 
