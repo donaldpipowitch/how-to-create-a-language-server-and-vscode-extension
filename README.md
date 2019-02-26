@@ -567,7 +567,8 @@ export function activate() {
   const clientOptions: LanguageClientOptions = {
     documentSelector: [
       {
-        language: 'jsonc'
+        pattern: '**/.vscode/extensions.json',
+        scheme: 'file'
       }
     ]
   };
@@ -596,15 +597,13 @@ The interesting part is the `client` itself and how it is configured inside `act
 
 The `serverOptions` itself comes in two flavors as well. We have the default `run` options and `debug` options. In both cases we specify our (language server) `module` in the form of a resolved path to `'@donaldpipowitch/vscode-extension-server'`. In the `debug` case we also set the port which can be used for the [debugging inspection](https://nodejs.org/en/docs/guides/debugging-getting-started/).
 
-The `clientOptions` are a little bit more interesting. With the `documentSelector` we say _when_ our client should _use_ the language server. In this case everytime when a JSONC file is used.
+The `clientOptions` are a little bit more interesting. With the `documentSelector` we say _when_ our client should _use_ the language server. In this case everytime a file matches the path `'**/.vscode/extensions.json'`.
 
 Let's recap:
 
 1. The `activationEvents` from our `package.json` tell VS Code _when_ to load our extension.
 2. The `clientOptions.documentSelector` tell our client _when_ to use the server (e.g. for code completion).
-3. The language server then checks (e.g. on code completion), if the file is actually a `.vscode/extensions.json`.
-
-Interestingly the `clientOptions.documentSelector` also offers a `patterns` setting which I set to `'**/.vscode/extensions.json'`. I thought it would only use our language server, if such a file is used, but the language server wasn't asked for any code completion instead. I'm not sure why, so I choose `language: 'jsonc'` which seems to work fine in general, because the language server filters out other files.
+3. The language server then checks (e.g. on code completion), if the file is actually a `.vscode/extensions.json`. (This looks a little bit redundant, but the server has no control over the client and the client _could_ ask for code completion in other files.)
 
 Let's skip the unit test this time, because our package only contains a little bit configuration. (Sorry!)
 

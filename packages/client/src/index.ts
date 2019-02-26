@@ -23,7 +23,8 @@ export function activate() {
   const clientOptions: LanguageClientOptions = {
     documentSelector: [
       {
-        language: 'jsonc'
+        pattern: '**/.vscode/extensions.json',
+        scheme: 'file'
       }
     ]
   };
